@@ -418,12 +418,21 @@ body {
 }
 
 
+.piece.theme-retro { font-family: "Times New Roman", serif; opacity: 0.94; }
 .piece.theme-medieval { font-family: "Times New Roman", serif; }
 .piece.theme-cibernetico { font-family: 'Orbitron', sans-serif; letter-spacing: 0.02em; }
-.piece.theme-robotico { letter-spacing: 0.04em; filter: drop-shadow(0 0 10px rgba(121, 246, 255, 0.35)); }
-.piece.theme-androide { text-shadow: 0 0 10px rgba(94, 255, 205, 0.55), 0 0 18px rgba(132, 190, 255, 0.3); }
+.piece.theme-robotico {
+  font-family: "Times New Roman", serif;
+  letter-spacing: 0.03em;
+  filter: drop-shadow(0 0 10px rgba(121, 246, 255, 0.4));
+}
+.piece.theme-androide {
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 10px rgba(94, 255, 205, 0.55), 0 0 18px rgba(132, 190, 255, 0.3);
+}
 .piece.theme-techno { text-shadow: 0 0 10px rgba(255, 241, 120, 0.5), 0 0 18px rgba(121, 246, 255, 0.33); }
-.piece.theme-merc { text-shadow: 0 0 10px rgba(255, 101, 188, 0.62), 0 0 24px rgba(255, 148, 77, 0.35); }
+.piece.theme-merc { text-shadow: 0 0 10px rgba(255, 101, 188, 0.62), 0 0 24px rgba(121, 246, 255, 0.3), 0 0 30px rgba(255, 148, 77, 0.35); }
 
 .board-info {
   display: grid;
