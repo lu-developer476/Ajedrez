@@ -29,15 +29,16 @@ const pieceThemeEl = document.getElementById('piece-theme');
 const boardThemeEl = document.getElementById('board-theme');
 const whiteTimerEl = document.getElementById('white-timer');
 const blackTimerEl = document.getElementById('black-timer');
+const boardWrapEl = document.querySelector('.board-wrap');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const PIECE_SETS = {
-  medieval: { wp: '♙', wr: '♖', wn: '♘', wb: '♗', wq: '♕', wk: '♔', bp: '♟', br: '♜', bn: '♞', bb: '♝', bq: '♛', bk: '♚' },
-  cibernetico: { wp: '⟡', wr: '⛨', wn: '⚙', wb: '⌬', wq: '✶', wk: '⛭', bp: '◆', br: '⛩', bn: '⚙', bb: '⬢', bq: '✹', bk: '☬' },
-  robotico: { wp: '◉', wr: '▣', wn: '⬡', wb: '◈', wq: '✦', wk: '⬢', bp: '◎', br: '▥', bn: '⬢', bb: '◇', bq: '✧', bk: '⬣' },
-  androide: { wp: '⊙', wr: '⌁', wn: '⌬', wb: '⟢', wq: '✺', wk: '⚚', bp: '◍', br: '⌇', bn: '⟣', bb: '⟠', bq: '✹', bk: '⚘' },
-  techno: { wp: '◌', wr: '⛶', wn: '⚑', wb: '⎔', wq: '✷', wk: '⛯', bp: '●', br: '⛝', bn: '⚐', bb: '⎚', bq: '✸', bk: '☢' },
-  merc: { wp: '◍', wr: '⛨', wn: '⚙', wb: '⌬', wq: '✶', wk: '☬', bp: '⬤', br: '⛩', bn: '⚙', bb: '⬢', bq: '✹', bk: '☠' },
+  medieval: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  cibernetico: { p: '⟡', r: '⛨', n: '⚙', b: '⌬', q: '✶', k: '⛭' },
+  robotico: { p: '◉', r: '▣', n: '⬡', b: '◈', q: '✦', k: '⬢' },
+  androide: { p: '⊙', r: '⌁', n: '⌬', b: '⟢', q: '✺', k: '⚚' },
+  techno: { p: '◌', r: '⛶', n: '⚑', b: '⎔', q: '✷', k: '⛯' },
+  merc: { p: '◍', r: '⛨', n: '⚙', b: '⌬', q: '✶', k: '☬' },
 };
 
 let state = null;
@@ -254,6 +255,9 @@ function renderCoordinates() {
 function applyBoardTheme() {
   boardEl.classList.remove('board-theme-classic', 'board-theme-obsidian', 'board-theme-neon-grid', 'board-theme-chrome', 'board-theme-synthwave');
   boardEl.classList.add(`board-theme-${boardTheme}`);
+  if (!boardWrapEl) return;
+  boardWrapEl.classList.remove('board-shell-theme-classic', 'board-shell-theme-obsidian', 'board-shell-theme-neon-grid', 'board-shell-theme-chrome', 'board-shell-theme-synthwave');
+  boardWrapEl.classList.add(`board-shell-theme-${boardTheme}`);
 }
 
 function render() {
@@ -273,7 +277,7 @@ function render() {
     if (p) {
       const sp = document.createElement('span');
       sp.className = `piece ${p[0] === 'w' ? 'white' : 'black'} theme-${pieceTheme}`;
-      sp.textContent = pieceSet[p] || '·';
+      sp.textContent = pieceSet[p[1]] || '·';
       sq.appendChild(sp);
     }
     sq.onclick = () => clickSquare(row, col);
