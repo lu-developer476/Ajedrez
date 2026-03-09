@@ -32,16 +32,20 @@ const pieceColorsEl = document.getElementById('piece-colors');
 const boardThemeEl = document.getElementById('board-theme');
 const fontThemeEl = document.getElementById('font-theme');
 const fontColorsEl = document.getElementById('font-colors');
+const coordinateStyleEl = document.getElementById('coordinate-style');
+const moveAnimationEl = document.getElementById('move-animation');
+const captureAnimationEl = document.getElementById('capture-animation');
 const whiteTimerEl = document.getElementById('white-timer');
 const blackTimerEl = document.getElementById('black-timer');
 const boardWrapEl = document.querySelector('.board-wrap');
-const tutorialBtnEl = document.getElementById('tutorial-btn');
 const openTutorialPanelBtnEl = document.getElementById('open-tutorial-panel-btn');
 const openVariationsBtnEl = document.getElementById('open-variations-btn');
 const toggleAllVariationsBtnEl = document.getElementById('toggle-all-variations-btn');
 const variationsSummaryEl = document.getElementById('variations-summary');
 const toggleAttacksBtnEl = document.getElementById('toggle-attacks-btn');
-const toggleAnimationsBtnEl = document.getElementById('toggle-animations-btn');
+const togglePromotionAnimationBtnEl = document.getElementById('toggle-promotion-animation-btn');
+const toggleCheckAnimationBtnEl = document.getElementById('toggle-check-animation-btn');
+const toggleLastMoveAnimationBtnEl = document.getElementById('toggle-last-move-animation-btn');
 const toggleAudioBtnEl = document.getElementById('toggle-audio-btn');
 const gameShellEl = document.querySelector('.game-shell');
 const lightCellDotEl = document.getElementById('light-cell-dot');
@@ -73,16 +77,13 @@ const TRAINING_VARIATIONS = [
 ];
 
 const TUTORIAL_ITEMS = [
-  { title: 'Apertura Italiana', text: 'Controlá el centro con e4 y piezas menores activas hacia c4/f3 para atacar f7.' },
-  { title: 'Defensa Siciliana', text: 'Respuesta dinámica con ...c5 para desequilibrar y buscar contrajuego en el flanco dama.' },
-  { title: 'Defensa Francesa', text: 'Estructura sólida con ...e6: cerrás el centro y contraatacás cadenas de peones blancas.' },
-  { title: 'Gambito de Dama', text: 'c4 ofrece peón para ganar iniciativa y líneas abiertas para alfiles y dama.' },
-  { title: 'Ruy López', text: 'Ab4 presiona el caballo de c6, debilitando la defensa del peón e5.' },
-  { title: 'Clavada', text: 'Inmovilizá una pieza porque moverla expone una pieza de mayor valor detrás.' },
-  { title: 'Doble ataque', text: 'Una pieza amenaza simultáneamente dos objetivos para ganar material o mate.' },
-  { title: 'Descubierta', text: 'Movés una pieza y liberás el ataque de otra que estaba tapada en la misma línea.' },
-  { title: 'Desviación', text: 'Forzás una pieza defensora a abandonar su casilla clave.' },
-  { title: 'Rayos X', text: 'Atacás a través de una pieza intermedia, aprovechando alineaciones en columna/diagonal.' },
+  { title: 'Reglas', text: 'Jaque, jaque mate, tablas, enroque corto/largo, captura al paso, promoción y ahogado.' },
+  { title: 'Peón', text: 'Avanza 1 casilla (o 2 desde inicio), captura en diagonal y puede promocionar al llegar al final.' },
+  { title: 'Torre', text: 'Se mueve en líneas rectas (filas y columnas) todas las casillas libres.' },
+  { title: 'Alfil', text: 'Se mueve en diagonales, tantas casillas como estén disponibles.' },
+  { title: 'Caballo', text: 'Movimiento en L y puede saltar piezas.' },
+  { title: 'Dama', text: 'Combina movimientos de torre y alfil, con gran alcance.' },
+  { title: 'Rey', text: 'Avanza una casilla en cualquier dirección y puede enrocarse.' },
 ];
 
 const PIECE_SETS = {
@@ -122,12 +123,17 @@ let gameTimer = null;
 let isPaused = false;
 let audioEnabled = true;
 let showAttackedSquares = false;
-let enableAnimations = true;
+let coordinateStyle = 'clasico';
+let moveAnimationStyle = 'deslizante';
+let captureAnimationStyle = 'desvanecimiento';
+let enablePromotionAnimation = true;
+let enableCheckAnimation = true;
+let enableLastMoveAnimation = true;
 let highlightLastMove = null;
 let activeVariations = new Set(TRAINING_VARIATIONS);
 
 function createInitialBoard() { return [['br','bn','bb','bq','bk','bb','bn','br'],['bp','bp','bp','bp','bp','bp','bp','bp'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['wp','wp','wp','wp','wp','wp','wp','wp'],['wr','wn','wb','wq','wk','wb','wn','wr']]; }
-function createState() { return { board: createInitialBoard(), turn: 'w', moveNumber: 1, history: [], captured: { w: [], b: [] }, lastMove: null, status: 'EN CURSO' }; }
+function createState() { return { board: createInitialBoard(), turn: 'w', moveNumber: 1, history: [], captured: { w: [], b: [] }, lastMove: null, status: 'EN CURSO', captureFX: null, promotionFX: null }; }
 const clone = (b) => b.map((r) => [...r]);
 const inBounds = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
 const algebraic = (r, c) => `${FILES[c]}${8 - r}`;
@@ -320,6 +326,9 @@ function renderCoordinates() {
   coordsBottomEl.innerHTML = coordsTopEl.innerHTML;
   coordsLeftEl.innerHTML = ranks.map((r) => `<span>${r}</span>`).join('');
   coordsRightEl.innerHTML = coordsLeftEl.innerHTML;
+  if (!boardWrapEl) return;
+  boardWrapEl.classList.remove('coordinate-style-clasico', 'coordinate-style-minimalista', 'coordinate-style-integrado', 'coordinate-style-futurista', 'coordinate-style-entrenamiento');
+  boardWrapEl.classList.add(`coordinate-style-${coordinateStyle}`);
 }
 
 
@@ -388,7 +397,9 @@ function updateVariationUI() {
     toggleAllVariationsBtnEl.textContent = activeVariations.size === TRAINING_VARIATIONS.length ? 'Desactivar todas' : 'Activar todas';
   }
   if (toggleAttacksBtnEl) toggleAttacksBtnEl.textContent = `Casillas atacadas: ${showAttackedSquares ? 'ON' : 'OFF'}`;
-  if (toggleAnimationsBtnEl) toggleAnimationsBtnEl.textContent = `Animaciones: ${enableAnimations ? 'ON' : 'OFF'}`;
+  if (togglePromotionAnimationBtnEl) togglePromotionAnimationBtnEl.textContent = `Animación promoción: ${enablePromotionAnimation ? 'ON' : 'OFF'}`;
+  if (toggleCheckAnimationBtnEl) toggleCheckAnimationBtnEl.textContent = `Animación jaque: ${enableCheckAnimation ? 'ON' : 'OFF'}`;
+  if (toggleLastMoveAnimationBtnEl) toggleLastMoveAnimationBtnEl.textContent = `Animación última jugada: ${enableLastMoveAnimation ? 'ON' : 'OFF'}`;
   if (toggleAudioBtnEl) toggleAudioBtnEl.textContent = `Audio: ${audioEnabled ? 'ON' : 'OFF'}`;
 }
 
@@ -398,7 +409,7 @@ async function openTutorialModal() {
   backdrop.className = 'cyber-modal-backdrop';
   backdrop.innerHTML = `
     <div class="cyber-modal panel-glow" role="dialog" aria-modal="true">
-      <h3>Tutorial de jugadas</h3>
+      <h3>Tutorial</h3>
       <div class="tutorial-list">${TUTORIAL_ITEMS.map((item) => `<p><span>${item.title}:</span> ${item.text}</p>`).join('')}</div>
       <div class="cyber-modal-actions">
         <button type="button" class="btn primary" data-act="ok">Entendido</button>
@@ -438,15 +449,21 @@ function render() {
   for (const row of rows) for (const col of cols) {
     const sq = document.createElement('button');
     sq.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+    sq.dataset.square = algebraic(row, col);
     if (selected?.row === row && selected?.col === col) sq.classList.add('selected');
     const m = legalMoves.find((x) => x.row === row && x.col === col);
     if (m) sq.classList.add(m.capture ? 'capture' : 'legal');
-    if (highlightLastMove && (highlightLastMove.from.row === row && highlightLastMove.from.col === col || highlightLastMove.to.row === row && highlightLastMove.to.col === col)) sq.classList.add('last-move');
+    if (enableLastMoveAnimation && highlightLastMove && (highlightLastMove.from.row === row && highlightLastMove.from.col === col || highlightLastMove.to.row === row && highlightLastMove.to.col === col)) sq.classList.add('last-move');
     if (showAttackedSquares) {
       if (whiteAttacked.has(`${row},${col}`)) sq.classList.add('attacked-by-white');
       if (blackAttacked.has(`${row},${col}`)) sq.classList.add('attacked-by-black');
     }
-    if (kingInCheck && kingInCheck.r === row && kingInCheck.c === col) sq.classList.add('in-check');
+    if (enableCheckAnimation && kingInCheck && kingInCheck.r === row && kingInCheck.c === col) sq.classList.add('in-check');
+    if (state.promotionFX && state.promotionFX.row === row && state.promotionFX.col === col) sq.classList.add('promotion-flash');
+    if (state.captureFX && state.captureFX.row === row && state.captureFX.col === col) {
+      sq.classList.add(`capture-${captureAnimationStyle}`);
+      if (state.captureFX.piece === 'n') sq.classList.add('capture-knight-leap');
+    }
     const p = state.board[row][col];
     if (p) {
       const sp = document.createElement('span');
@@ -455,9 +472,16 @@ function render() {
       sq.dataset.pieceName = `${pieceLabel} · ${sideLabel}`;
       sq.setAttribute('aria-label', `${pieceLabel} ${sideLabel} en ${algebraic(row, col)}`);
       sp.className = `piece ${p[0] === 'w' ? 'white' : 'black'} theme-${pieceTheme}`;
-      if (enableAnimations) sp.classList.add('animated-piece');
+      if (moveAnimationStyle === 'deslizante') sp.classList.add('animated-piece');
       sp.textContent = getPieceSymbol(pieceSet, p[1], p[0]);
       sq.appendChild(sp);
+    }
+    if (coordinateStyle === 'integrado') {
+      const coord = document.createElement('span');
+      coord.className = 'integrated-coordinate';
+      if (col === 0) coord.textContent = String(8 - row);
+      else if (row === 7) coord.textContent = FILES[col];
+      if (coord.textContent) sq.appendChild(coord);
     }
     sq.onclick = () => clickSquare(row, col);
     boardEl.appendChild(sq);
@@ -620,13 +644,19 @@ function selectSquare(row, col) {
 
 async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
   const piece = state.board[fr][fc], target = state.board[tr][tc];
-  if (piece?.[1] === 'p' && ((piece[0] === 'w' && tr === 0) || (piece[0] === 'b' && tr === 7)) && !promotionChoice) {
+  const isPromotionMove = piece?.[1] === 'p' && ((piece[0] === 'w' && tr === 0) || (piece[0] === 'b' && tr === 7));
+  if (isPromotionMove && !promotionChoice) {
     promotionChoice = await openPromotionSelector(piece[0]);
   }
   state.board[tr][tc] = piece;
   state.board[fr][fc] = null;
   applyPromotion(state.board, tr, tc, promotionChoice);
-  if (target) state.captured[piece[0]].push(target);
+  if (isPromotionMove && enablePromotionAnimation) state.promotionFX = { row: tr, col: tc };
+  else state.promotionFX = null;
+  if (target) {
+    state.captured[piece[0]].push(target);
+    state.captureFX = { row: tr, col: tc, piece: piece[1] };
+  } else state.captureFX = null;
   const sideText = piece[0] === 'w' ? 'Blancas' : 'Negras';
   const pieceName = PIECE_NAMES[piece[1]] || 'Ficha';
   state.history.unshift(`${sideText}: ${pieceName} ${state.moveNumber}. ${algebraic(fr, fc)} → ${algebraic(tr, tc)}`);
@@ -706,6 +736,9 @@ if (pieceColorsEl) pieceColorsEl.onchange = () => { pieceColorTheme = pieceColor
 if (boardThemeEl) boardThemeEl.onchange = () => { boardTheme = boardThemeEl.value || 'classic'; render(); };
 if (fontThemeEl) fontThemeEl.onchange = () => { fontTheme = fontThemeEl.value || 'rajdhani'; render(); };
 if (fontColorsEl) fontColorsEl.onchange = () => { fontColorTheme = fontColorsEl.value || 'default'; render(); };
+if (coordinateStyleEl) coordinateStyleEl.onchange = () => { coordinateStyle = coordinateStyleEl.value || 'clasico'; renderCoordinates(); render(); };
+if (moveAnimationEl) moveAnimationEl.onchange = () => { moveAnimationStyle = moveAnimationEl.value || 'deslizante'; render(); };
+if (captureAnimationEl) captureAnimationEl.onchange = () => { captureAnimationStyle = captureAnimationEl.value || 'desvanecimiento'; render(); };
 
 onlineCreateBtn.onclick = async () => {
   const player = await openCyberPrompt({ title: 'Crear sala', message: 'Ingresá tu alias de jugador', defaultValue: 'White' });
@@ -776,7 +809,6 @@ resetViewBtn.onclick = () => {
 };
 
 
-if (tutorialBtnEl) tutorialBtnEl.onclick = () => openTutorialModal();
 if (openTutorialPanelBtnEl) openTutorialPanelBtnEl.onclick = () => openTutorialModal();
 if (openVariationsBtnEl) openVariationsBtnEl.onclick = () => configureVariations();
 if (toggleAllVariationsBtnEl) {
@@ -786,7 +818,9 @@ if (toggleAllVariationsBtnEl) {
   };
 }
 if (toggleAttacksBtnEl) toggleAttacksBtnEl.onclick = () => { showAttackedSquares = !showAttackedSquares; render(); };
-if (toggleAnimationsBtnEl) toggleAnimationsBtnEl.onclick = () => { enableAnimations = !enableAnimations; render(); };
+if (togglePromotionAnimationBtnEl) togglePromotionAnimationBtnEl.onclick = () => { enablePromotionAnimation = !enablePromotionAnimation; render(); };
+if (toggleCheckAnimationBtnEl) toggleCheckAnimationBtnEl.onclick = () => { enableCheckAnimation = !enableCheckAnimation; render(); };
+if (toggleLastMoveAnimationBtnEl) toggleLastMoveAnimationBtnEl.onclick = () => { enableLastMoveAnimation = !enableLastMoveAnimation; render(); };
 if (toggleAudioBtnEl) {
   toggleAudioBtnEl.onclick = () => {
     audioEnabled = !audioEnabled;
