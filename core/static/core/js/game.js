@@ -39,7 +39,10 @@ const PIECE_SETS = {
     white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
     black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
   },
-  cibernetico: { p: '⟡', r: '⛨', n: '⚙', b: '⌬', q: '✶', k: '⛭' },
+  cibernetico: {
+    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
+    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  },
   robotico: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
   androide: { p: '◍', r: '⛶', n: '⬢', b: '◇', q: '✹', k: '⛯' },
   techno: { p: '◌', r: '⛶', n: '⚑', b: '⎔', q: '✷', k: '⛯' },
@@ -272,7 +275,7 @@ function getPieceSymbol(pieceSet, piece, side) {
 }
 
 function applyPieceColorTheme() {
-  boardEl.classList.remove('piece-color-original', 'piece-color-moderno', 'piece-color-staunton', 'piece-color-digital');
+  boardEl.classList.remove('piece-color-original', 'piece-color-moderno', 'piece-color-staunton', 'piece-color-digital', 'piece-color-cyberpunk');
   boardEl.classList.add(`piece-color-${pieceColorTheme}`);
 }
 

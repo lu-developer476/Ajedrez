@@ -433,6 +433,8 @@ body {
 .board.piece-color-staunton .piece.black { color: #4a2a1a; }
 .board.piece-color-digital .piece.white { color: #d8af47; text-shadow: 0 0 10px rgba(255, 219, 117, 0.45), 0 0 18px rgba(255, 185, 74, 0.24); }
 .board.piece-color-digital .piece.black { color: #c5ccd5; text-shadow: 0 0 10px rgba(230, 244, 255, 0.4), 0 0 18px rgba(177, 195, 217, 0.25); }
+.board.piece-color-cyberpunk .piece.white { color: #00f6ff; text-shadow: 0 0 10px rgba(0, 246, 255, 0.65), 0 0 20px rgba(0, 187, 255, 0.4); }
+.board.piece-color-cyberpunk .piece.black { color: #ff00c8; text-shadow: 0 0 10px rgba(255, 0, 200, 0.62), 0 0 22px rgba(255, 74, 220, 0.38); }
 
 .piece.theme-retro { font-family: "Times New Roman", serif; opacity: 0.94; }
 .piece.theme-medieval {
@@ -440,7 +442,18 @@ body {
   font-weight: 700;
   text-shadow: 0 2px 2px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.28);
 }
-.piece.theme-cibernetico { font-family: 'Orbitron', sans-serif; letter-spacing: 0.02em; }
+.piece.theme-cibernetico {
+  font-family: "Cinzel", "Times New Roman", serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transform: scale(1.02);
+}
+.board .piece.theme-cibernetico.white {
+  text-shadow: 0 0 9px rgba(82, 246, 255, 0.42), 0 0 18px rgba(61, 154, 255, 0.26), 0 8px 14px rgba(3, 18, 28, 0.45);
+}
+.board .piece.theme-cibernetico.black {
+  text-shadow: 0 0 9px rgba(255, 114, 189, 0.45), 0 0 18px rgba(255, 45, 114, 0.3), 0 8px 14px rgba(22, 0, 10, 0.55);
+}
 .piece.theme-robotico {
   font-family: "Times New Roman", serif;
   letter-spacing: 0.03em;
