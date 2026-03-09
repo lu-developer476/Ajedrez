@@ -17,6 +17,8 @@
   --dark-cell: #8b4323;
   --light-piece: #fff3e8;
   --dark-piece: #2a1111;
+  --font-main: 'Rajdhani', sans-serif;
+  --font-title: 'Orbitron', sans-serif;
   --cell-size: min(9.8vw, 76px);
   --board-side: calc(var(--cell-size) * 8);
 }
@@ -25,7 +27,7 @@
 html, body {
   margin: 0;
   min-height: 100%;
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-main);
   color: var(--text);
   background:
     radial-gradient(circle at top left, rgba(255, 110, 199, 0.14), transparent 28%),
@@ -88,9 +90,40 @@ body {
 }
 
 .brand-box { padding: 14px 16px; text-align: center; }
+
+.game-shell.font-theme-orbitron {
+  --font-main: 'Orbitron', sans-serif;
+  --font-title: 'Orbitron', sans-serif;
+}
+
+.game-shell.font-theme-cinzel {
+  --font-main: 'Cinzel', serif;
+  --font-title: 'Cinzel', serif;
+}
+
+.game-shell.font-color-default {
+  --text: #ffe8dd;
+  --muted: #ffc2aa;
+}
+
+.game-shell.font-color-warm {
+  --text: #ffe7bc;
+  --muted: #ffbf6a;
+}
+
+.game-shell.font-color-ice {
+  --text: #dcf7ff;
+  --muted: #8ed7ff;
+}
+
+.game-shell.font-color-neon {
+  --text: #ebdbff;
+  --muted: #ff8fea;
+}
+
 .eyebrow {
   margin: 0;
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-title);
   letter-spacing: 0.22em;
   font-weight: 700;
   text-transform: uppercase;
@@ -102,7 +135,7 @@ body {
 .board-topbar h2 {
   margin: 8px 0;
   color: #fff;
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-title);
   line-height: 0.95;
   text-shadow: 0 0 20px rgba(255,255,255,0.2), 0 0 36px rgba(255,110,199,0.24);
 }
@@ -473,6 +506,22 @@ body {
 }
 
 .square:hover .piece { transform: translateY(-2px) scale(1.06); }
+
+.square {
+  touch-action: manipulation;
+}
+
+@media (hover: none) {
+  .square {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .square .piece {
+    transform: scale(1.04);
+  }
+}
+
 .piece.white {
   color: #f3e8cf;
   text-shadow: 0 0 8px rgba(255, 236, 202, 0.44), 0 10px 14px rgba(24, 14, 5, 0.32);
@@ -582,7 +631,9 @@ body {
 #ai-level,
 #piece-theme,
 #piece-colors,
-#board-theme {
+#board-theme,
+#font-theme,
+#font-colors {
   grid-column: 1 / -1;
   text-align: center;
   text-align-last: center;
@@ -616,7 +667,9 @@ body {
 .theme-selects #ai-level,
 .theme-selects #piece-theme,
 .theme-selects #piece-colors,
-.theme-selects #board-theme {
+.theme-selects #board-theme,
+.theme-selects #font-theme,
+.theme-selects #font-colors {
   grid-column: auto;
 }
 
@@ -721,9 +774,9 @@ body {
   padding: 16px;
   display: grid;
   gap: 10px;
-  border-color: rgba(232, 176, 102, 0.55);
-  background: linear-gradient(160deg, rgba(48, 27, 16, 0.96), rgba(24, 13, 8, 0.94));
-  box-shadow: 0 0 0 1px rgba(255,240,214,0.08) inset, 0 0 24px rgba(196, 140, 74, 0.28), 0 18px 40px rgba(0, 0, 0, 0.36);
+  border-color: var(--panel-border);
+  background: linear-gradient(160deg, rgba(62, 20, 39, 0.94), rgba(24, 13, 8, 0.92));
+  box-shadow: 0 0 0 1px rgba(255,240,214,0.08) inset, 0 0 24px rgba(255, 110, 199, 0.2), 0 18px 40px rgba(0, 0, 0, 0.36);
 }
 
 .timer-panel .eyebrow {
@@ -757,10 +810,10 @@ body {
   display: grid;
   align-content: start;
   gap: 14px;
-  border-color: rgba(213, 241, 107, 0.56);
+  border-color: var(--panel-border);
   box-shadow:
     0 0 0 1px rgba(255,255,255,0.03) inset,
-    0 0 26px rgba(213, 241, 107, 0.2),
+    0 0 26px rgba(255, 110, 199, 0.18),
     0 18px 40px rgba(0, 0, 0, 0.36);
 }
 

@@ -45,7 +45,7 @@
     <section class="arena panel-glow">
       <div class="board-topbar">
         <div><h2>Tablero</h2></div>
-        <div class="legend-inline"><span><i class="dot dot-light"></i>Casilla clara</span><span><i class="dot dot-dark"></i>Casilla oscura</span></div>
+        <div class="legend-inline"><span><i id="light-cell-dot" class="dot dot-light"></i>Casilla clara</span><span><i id="dark-cell-dot" class="dot dot-dark"></i>Casilla oscura</span></div>
       </div>
       <div class="board-wrap">
         <div class="coordinates coords-top" id="coords-top"></div>
@@ -103,6 +103,17 @@
           <option value="ecologista">Tablero · Naturaleza</option>
           <option value="futurista">Tablero · Techno</option>
         </select>
+        <select id="font-theme" class="btn secondary" aria-label="Diseño de letras">
+          <option value="rajdhani" selected>Letras · Rajdhani</option>
+          <option value="orbitron">Letras · Orbitron</option>
+          <option value="cinzel">Letras · Cinzel</option>
+        </select>
+        <select id="font-colors" class="btn secondary" aria-label="Color de letras">
+          <option value="default" selected>Tipografía · Default</option>
+          <option value="warm">Tipografía · Cálida</option>
+          <option value="ice">Tipografía · Ice</option>
+          <option value="neon">Tipografía · Neón</option>
+        </select>
       </div>
     </section>
 
@@ -142,7 +153,7 @@
     <span class="footer-separator" aria-hidden="true">•</span>
     <span class="footer-item">Built with Python &amp; Django</span>
     <span class="footer-separator" aria-hidden="true">•</span>
-    <span class="footer-item">Database powered by &amp; Supabase</span>
+    <span class="footer-item">Database powered by Supabase</span>
     <span class="footer-separator" aria-hidden="true">•</span>
     <span class="footer-item">UX/UI Interface</span>
     <span class="footer-separator" aria-hidden="true">•</span>

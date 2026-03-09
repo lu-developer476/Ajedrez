@@ -30,6 +30,8 @@ const aiLevelEl = document.getElementById('ai-level');
 const pieceThemeEl = document.getElementById('piece-theme');
 const pieceColorsEl = document.getElementById('piece-colors');
 const boardThemeEl = document.getElementById('board-theme');
+const fontThemeEl = document.getElementById('font-theme');
+const fontColorsEl = document.getElementById('font-colors');
 const whiteTimerEl = document.getElementById('white-timer');
 const blackTimerEl = document.getElementById('black-timer');
 const boardWrapEl = document.querySelector('.board-wrap');
@@ -41,6 +43,9 @@ const variationsSummaryEl = document.getElementById('variations-summary');
 const toggleAttacksBtnEl = document.getElementById('toggle-attacks-btn');
 const toggleAnimationsBtnEl = document.getElementById('toggle-animations-btn');
 const toggleAudioBtnEl = document.getElementById('toggle-audio-btn');
+const gameShellEl = document.querySelector('.game-shell');
+const lightCellDotEl = document.getElementById('light-cell-dot');
+const darkCellDotEl = document.getElementById('dark-cell-dot');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -109,6 +114,8 @@ let aiLevel = 3;
 let pieceTheme = 'humano';
 let pieceColorTheme = 'original';
 let boardTheme = 'classic';
+let fontTheme = 'rajdhani';
+let fontColorTheme = 'default';
 let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
 let gameTimer = null;
@@ -315,12 +322,40 @@ function renderCoordinates() {
   coordsRightEl.innerHTML = coordsLeftEl.innerHTML;
 }
 
+
+const BOARD_THEME_PREVIEWS = {
+  classic: { light: 'linear-gradient(135deg, #eedbc3, #d9b88f)', dark: 'linear-gradient(135deg, #8f5b35, #5f351c)' },
+  minimalista: { light: 'linear-gradient(145deg, #ffffff, #d8d8d8)', dark: 'linear-gradient(145deg, #2f2f2f, #0d0d0d)' },
+  vidrio: { light: 'linear-gradient(135deg, rgba(224,245,255,0.65), rgba(255,255,255,0.3))', dark: 'linear-gradient(135deg, rgba(107,170,196,0.45), rgba(24,65,86,0.5))' },
+  ecologista: { light: 'linear-gradient(145deg, #d4efcb, #9ccc88)', dark: 'linear-gradient(145deg, #4c7d3f, #234f21)' },
+  futurista: { light: 'linear-gradient(145deg, #d4f8ff, #8ad8ff)', dark: 'linear-gradient(145deg, #10213a, #050d1f)' },
+};
+
+function updateBoardLegendDots() {
+  const preview = BOARD_THEME_PREVIEWS[boardTheme] || BOARD_THEME_PREVIEWS.classic;
+  if (lightCellDotEl) lightCellDotEl.style.background = preview.light;
+  if (darkCellDotEl) darkCellDotEl.style.background = preview.dark;
+}
+
+function applyFontTheme() {
+  if (!gameShellEl) return;
+  gameShellEl.classList.remove('font-theme-rajdhani', 'font-theme-orbitron', 'font-theme-cinzel');
+  gameShellEl.classList.add(`font-theme-${fontTheme}`);
+}
+
+function applyFontColorTheme() {
+  if (!gameShellEl) return;
+  gameShellEl.classList.remove('font-color-default', 'font-color-warm', 'font-color-ice', 'font-color-neon');
+  gameShellEl.classList.add(`font-color-${fontColorTheme}`);
+}
+
 function applyBoardTheme() {
   boardEl.classList.remove('board-theme-classic', 'board-theme-minimalista', 'board-theme-vidrio', 'board-theme-ecologista', 'board-theme-futurista');
   boardEl.classList.add(`board-theme-${boardTheme}`);
   if (!boardWrapEl) return;
   boardWrapEl.classList.remove('board-shell-theme-classic', 'board-shell-theme-minimalista', 'board-shell-theme-vidrio', 'board-shell-theme-ecologista', 'board-shell-theme-futurista');
   boardWrapEl.classList.add(`board-shell-theme-${boardTheme}`);
+  updateBoardLegendDots();
 }
 
 function getPieceSymbol(pieceSet, piece, side) {
@@ -391,6 +426,8 @@ function render() {
   boardEl.innerHTML = '';
   applyBoardTheme();
   applyPieceColorTheme();
+  applyFontTheme();
+  applyFontColorTheme();
   const pieceSet = PIECE_SETS[pieceTheme] || PIECE_SETS.humano;
   const rows = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
   const cols = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
@@ -439,7 +476,7 @@ function render() {
   if (aiLevelEl) aiLevelEl.style.display = mode === 'ai' ? 'block' : 'none';
   updateVariationUI();
   if (pauseGameBtn) pauseGameBtn.textContent = isPaused ? 'Reanudar' : 'Pausar';
-  if (isPaused) statusTextEl.textContent = 'PAUSADA';
+  if (isPaused) statusTextEl.textContent = 'PAUSED';
 }
 
 function pushIfValid(board, moves, row, col, tr, tc) { if (!inBounds(tr, tc)) return; const p = board[row][col]; const t = board[tr][tc]; if (!t) moves.push({ row: tr, col: tc, capture: false }); else if (t[0] !== p[0]) moves.push({ row: tr, col: tc, capture: true }); }
@@ -667,6 +704,8 @@ if (aiLevelEl) aiLevelEl.onchange = () => { aiLevel = Number(aiLevelEl.value) ||
 if (pieceThemeEl) pieceThemeEl.onchange = () => { pieceTheme = pieceThemeEl.value || 'humano'; render(); };
 if (pieceColorsEl) pieceColorsEl.onchange = () => { pieceColorTheme = pieceColorsEl.value || 'original'; render(); };
 if (boardThemeEl) boardThemeEl.onchange = () => { boardTheme = boardThemeEl.value || 'classic'; render(); };
+if (fontThemeEl) fontThemeEl.onchange = () => { fontTheme = fontThemeEl.value || 'rajdhani'; render(); };
+if (fontColorsEl) fontColorsEl.onchange = () => { fontColorTheme = fontColorsEl.value || 'default'; render(); };
 
 onlineCreateBtn.onclick = async () => {
   const player = await openCyberPrompt({ title: 'Crear sala', message: 'Ingresá tu alias de jugador', defaultValue: 'White' });
@@ -727,7 +766,14 @@ if (pauseGameBtn) {
   };
 }
 flipBoardBtn.onclick = () => { flipped = !flipped; renderCoordinates(); render(); };
-resetViewBtn.onclick = () => { selected = null; legalMoves = []; render(); };
+resetViewBtn.onclick = () => {
+  selected = null;
+  legalMoves = [];
+  highlightLastMove = null;
+  if (commandFromEl) commandFromEl.value = '';
+  if (commandToEl) commandToEl.value = '';
+  render();
+};
 
 
 if (tutorialBtnEl) tutorialBtnEl.onclick = () => openTutorialModal();
@@ -763,6 +809,7 @@ if (volumeSliderEl) {
     ensureAudioContext();
   };
   volumeSliderEl.addEventListener('pointerdown', ensureAudioContext);
+  volumeSliderEl.addEventListener('touchstart', ensureAudioContext, { passive: true });
   volumeSliderEl.addEventListener('keydown', ensureAudioContext);
 }
 
@@ -782,6 +829,7 @@ if (commandFromEl && commandToEl) {
 
 updateVolumeUI();
 updateVariationUI();
+updateBoardLegendDots();
 resetGame();
 loadRanking();
 
