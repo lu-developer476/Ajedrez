@@ -20,6 +20,8 @@ const coordsTopEl = document.getElementById('coords-top');
 const coordsBottomEl = document.getElementById('coords-bottom');
 const coordsLeftEl = document.getElementById('coords-left');
 const coordsRightEl = document.getElementById('coords-right');
+const volumeSliderEl = document.getElementById('volume-slider');
+const audioStateEl = document.getElementById('audio-state');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const PIECES = { wp: '♙', wr: '♖', wn: '♘', wb: '♗', wq: '♕', wk: '♔', bp: '♟', br: '♜', bn: '♞', bb: '♝', bq: '♛', bk: '♚' };
@@ -31,6 +33,9 @@ let flipped = false;
 let mode = 'local';
 let roomCode = null;
 let pollTimer = null;
+let audioCtx = null;
+let masterGain = null;
+let volume = 1;
 
 function createInitialBoard() { return [['br','bn','bb','bq','bk','bb','bn','br'],['bp','bp','bp','bp','bp','bp','bp','bp'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['wp','wp','wp','wp','wp','wp','wp','wp'],['wr','wn','wb','wq','wk','wb','wn','wr']]; }
 function createState() { return { board: createInitialBoard(), turn: 'w', moveNumber: 1, history: [], captured: { w: [], b: [] }, lastMove: null, status: 'EN CURSO' }; }
@@ -39,6 +44,66 @@ const inBounds = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
 const algebraic = (r, c) => `${FILES[c]}${8 - r}`;
 
 function resetGame() { state = createState(); selected = null; legalMoves = []; renderCoordinates(); render(); }
+
+
+function ensureAudioContext() {
+  if (!window.AudioContext && !window.webkitAudioContext) return false;
+  if (!audioCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new Ctx();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = volume;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return true;
+}
+
+function playTone(frequency, duration = 0.12, type = 'sine', delay = 0) {
+  if (!ensureAudioContext() || !masterGain || volume === 0) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const startAt = audioCtx.currentTime + delay;
+  const endAt = startAt + duration;
+  osc.type = type;
+  osc.frequency.setValueAtTime(frequency, startAt);
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(0.32, startAt + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start(startAt);
+  osc.stop(endAt);
+}
+
+function playMoveSound(isCapture, status) {
+  if (status.includes('JAQUE MATE')) {
+    playTone(196, 0.14, 'triangle');
+    playTone(146.8, 0.18, 'triangle', 0.14);
+    return;
+  }
+  if (status === 'JAQUE') {
+    playTone(659.25, 0.08, 'square');
+    playTone(783.99, 0.08, 'square', 0.09);
+    return;
+  }
+  if (isCapture) {
+    playTone(220, 0.08, 'sawtooth');
+    playTone(164.81, 0.1, 'sawtooth', 0.08);
+    return;
+  }
+  playTone(523.25, 0.08, 'triangle');
+  playTone(659.25, 0.08, 'triangle', 0.07);
+}
+
+function updateVolumeUI() {
+  if (!volumeSliderEl || !audioStateEl) return;
+  const pct = Math.round(volume * 100);
+  volumeSliderEl.value = String(pct);
+  volumeSliderEl.style.setProperty('--volume-fill', `${pct}%`);
+  audioStateEl.textContent = pct === 0 ? '🔇 Sonido inactivo (0%)' : `🔊 Sonido activo (${pct}%)`;
+}
+
 
 function renderCoordinates() {
   const files = flipped ? [...FILES].reverse() : FILES;
@@ -99,6 +164,7 @@ async function makeMove(fr, fc, tr, tc) {
   state.turn = state.turn === 'w' ? 'b' : 'w'; state.moveNumber += 1; selected = null; legalMoves = [];
   const check = isKingInCheck(state.board, state.turn), active = hasAny(state.board, state.turn);
   state.status = check && !active ? `JAQUE MATE · ${state.turn === 'w' ? 'NEGRAS' : 'BLANCAS'} GANAN` : check ? 'JAQUE' : !active ? 'TABLAS' : 'EN CURSO';
+  playMoveSound(Boolean(target), state.status);
   render();
   if (mode === 'online' && roomCode) await syncOnline();
   if (mode === 'ai' && state.turn === 'b' && state.status === 'EN CURSO') await playAi();
@@ -131,4 +197,16 @@ onlineJoinBtn.onclick = async () => { const code = (prompt('Código de sala') ||
 
 newGameBtn.onclick = resetGame; flipBoardBtn.onclick = () => { flipped = !flipped; renderCoordinates(); render(); }; resetViewBtn.onclick = () => { selected = null; legalMoves = []; render(); };
 
+if (volumeSliderEl) {
+  volumeSliderEl.oninput = () => {
+    volume = Number(volumeSliderEl.value) / 100;
+    if (masterGain) masterGain.gain.value = volume;
+    updateVolumeUI();
+    ensureAudioContext();
+  };
+  volumeSliderEl.addEventListener('pointerdown', ensureAudioContext);
+  volumeSliderEl.addEventListener('keydown', ensureAudioContext);
+}
+
+updateVolumeUI();
 resetGame(); loadRanking();

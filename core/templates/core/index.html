@@ -61,6 +61,12 @@
         <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
         <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
       </div>
+      <div class="audio-panel panel-glow" aria-label="Panel de sonido">
+        <p class="eyebrow">Audio</p>
+        <div class="audio-state" id="audio-state">🔊 Sonido activo (100%)</div>
+        <label for="volume-slider" class="audio-label">Volumen</label>
+        <input id="volume-slider" class="volume-slider" type="range" min="0" max="100" value="100" aria-label="Control de volumen">
+      </div>
       <div class="tips panel-glow">
         <p><span>Reglas:</span> incluye enroque, captura al paso y promoción manual (si aplica en jugadas).</p>
         <p><span>Jugadas:</span> mate del pastor, italiana, siciliana y tácticas (clavada, doble ataque).</p>
@@ -73,7 +79,15 @@
       </div>
     </section>
   </main>
-  <footer class="footer"><span class="footer-item">© <span id="year"></span> Cyborg Chess</span></footer>
+  <footer class="footer">
+    <span class="footer-item">© <span id="year"></span> Todos los derechos reservados</span>
+    <span class="footer-separator" aria-hidden="true">•</span>
+    <span class="footer-item">Built with Python &amp; Django</span>
+    <span class="footer-separator" aria-hidden="true">•</span>
+    <span class="footer-item">UX/UI Interface</span>
+    <span class="footer-separator" aria-hidden="true">•</span>
+    <span class="footer-item">Deployed on Render ®</span>
+  </footer>
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
   <script src="{% static 'core/js/game.js' %}?v=cyborg-chess-v2"></script>
 </body>
