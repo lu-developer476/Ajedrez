@@ -65,6 +65,7 @@
             <div class="leaderboard panel-inline leaderboard-compact">
               <div class="leaderboard-header"><p class="eyebrow">HISTORIAL</p><h2>Movimientos</h2></div>
               <ol id="move-history" class="move-history"></ol>
+              <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
             </div>
           </aside>
         </div>
@@ -85,11 +86,9 @@
         </select>
         <select id="piece-theme" class="btn secondary" aria-label="Estilo de fichas">
           <option value="retro">Fichas · Retro</option>
-          <option value="medieval" selected>Fichas · Medieval videojuego (default)</option>
-          <option value="cibernetico">Fichas · Cibernético</option>
-          <option value="robotico">Fichas · Robótico (metal)</option>
-          <option value="androide">Fichas · Androide videojuego</option>
-          <option value="techno">Fichas · Techno</option>
+          <option value="humano" selected>Fichas · Roles humanos/objetos</option>
+          <option value="cyborg">Fichas · Cyborg</option>
+          <option value="syntech">Fichas · Syntech</option>
           <option value="merc">Fichas · Merc (híbrido cyberpunk)</option>
         </select>
         <select id="piece-colors" class="btn secondary" aria-label="Paleta de color de fichas">
@@ -100,11 +99,11 @@
           <option value="cyberpunk">Colores · Cyberpunk (cyan y magenta)</option>
         </select>
         <select id="board-theme" class="btn secondary" aria-label="Estilo de tablero">
-          <option value="classic" selected>Tablero · Clásico Neon (default)</option>
-          <option value="obsidian">Tablero · Obsidiana</option>
-          <option value="neon-grid">Tablero · Neon Grid</option>
-          <option value="chrome">Tablero · Cromo Industrial</option>
-          <option value="synthwave">Tablero · Synthwave</option>
+          <option value="classic" selected>Tablero · Clásico (madera)</option>
+          <option value="minimalista">Tablero · Minimalista (blanco y negro)</option>
+          <option value="vidrio">Tablero · Vidrio</option>
+          <option value="ecologista">Tablero · Ecologista</option>
+          <option value="futurista">Tablero · Futurista</option>
         </select>
       </div>
     </section>
@@ -112,9 +111,11 @@
     <section class="aux-panels">
       <div class="controls panel-glow">
         <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Multijugador online</option></select>
+        <div class="ai-level-spot panel-inline" id="ai-level-spot">IA Nivel 3 · Táctica</div>
         <button id="new-game-btn" class="btn primary" type="button">Nueva partida</button>
+        <button id="pause-game-btn" class="btn secondary" type="button">Pausar</button>
+        <button id="restart-game-btn" class="btn danger" type="button">Reiniciar partida</button>
         <button id="flip-board-btn" class="btn secondary" type="button">Girar tablero</button>
-        <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
         <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
         <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
       </div>
