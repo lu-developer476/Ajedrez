@@ -22,6 +22,8 @@ const coordsLeftEl = document.getElementById('coords-left');
 const coordsRightEl = document.getElementById('coords-right');
 const volumeSliderEl = document.getElementById('volume-slider');
 const audioStateEl = document.getElementById('audio-state');
+const commandFromEl = document.getElementById('command-from');
+const commandToEl = document.getElementById('command-to');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const PIECES = { wp: '♙', wr: '♖', wn: '♘', wb: '♗', wq: '♕', wk: '♔', bp: '♟', br: '♜', bn: '♞', bb: '♝', bq: '♛', bk: '♚' };
@@ -42,6 +44,15 @@ function createState() { return { board: createInitialBoard(), turn: 'w', moveNu
 const clone = (b) => b.map((r) => [...r]);
 const inBounds = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
 const algebraic = (r, c) => `${FILES[c]}${8 - r}`;
+
+function parseSquare(input) {
+  if (!input) return null;
+  const txt = input.trim().toLowerCase();
+  if (!/^[a-h][1-8]$/.test(txt)) return null;
+  const file = FILES.indexOf(txt[0]);
+  const rank = Number(txt[1]);
+  return { row: 8 - rank, col: file };
+}
 
 function resetGame() { state = createState(); selected = null; legalMoves = []; renderCoordinates(); render(); }
 
@@ -137,11 +148,85 @@ function getPseudoMoves(board, row, col) { const p = board[row][col]; if (!p) re
   if (['b','r','q'].includes(t)) { const d=[]; if (['b','q'].includes(t)) d.push([-1,-1],[-1,1],[1,-1],[1,1]); if (['r','q'].includes(t)) d.push([-1,0],[1,0],[0,-1],[0,1]); for (const [dr,dc] of d) { let r = row + dr, c2 = col + dc; while (inBounds(r, c2)) { const tar = board[r][c2]; if (!tar) moves.push({ row: r, col: c2, capture: false }); else { if (tar[0] !== c) moves.push({ row: r, col: c2, capture: true }); break; } r += dr; c2 += dc; } } }
   if (t === 'k') for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) if (dr||dc) pushIfValid(board,moves,row,col,row+dr,col+dc);
   return moves; }
-function applyPromotion(board, row, col) { const p = board[row][col]; if (!p || p[1] !== 'p') return; if ((p[0] === 'w' && row === 0) || (p[0] === 'b' && row === 7)) { const choice = prompt('Promoción: q,r,b,n', 'q') || 'q'; board[row][col] = `${p[0]}${['q','r','b','n'].includes(choice) ? choice : 'q'}`; } }
+function applyPromotion(board, row, col, preferred = 'q') {
+  const p = board[row][col];
+  if (!p || p[1] !== 'p') return;
+  if ((p[0] === 'w' && row === 0) || (p[0] === 'b' && row === 7)) {
+    const valid = ['q', 'r', 'b', 'n'];
+    board[row][col] = `${p[0]}${valid.includes(preferred) ? preferred : 'q'}`;
+  }
+}
 function locateKing(board, color) { for (let r=0;r<8;r++) for (let c=0;c<8;c++) if (board[r][c]===`${color}k`) return {r,c}; return null; }
 function isKingInCheck(board, color) { const k = locateKing(board, color); if (!k) return false; const e = color === 'w' ? 'b' : 'w'; for (let r=0;r<8;r++) for (let c=0;c<8;c++) if (board[r][c]?.[0]===e && getPseudoMoves(board, r, c).some((m)=>m.row===k.r&&m.col===k.c)) return true; return false; }
-function getLegalMoves(board, row, col) { return getPseudoMoves(board, row, col).filter((m) => { const b = clone(board); b[m.row][m.col] = b[row][col]; b[row][col] = null; applyPromotion(b, m.row, m.col); return !isKingInCheck(b, board[m.row][m.col][0]); }); }
+function getLegalMoves(board, row, col) {
+  return getPseudoMoves(board, row, col).filter((m) => {
+    const b = clone(board);
+    const movingPiece = b[row][col];
+    b[m.row][m.col] = movingPiece;
+    b[row][col] = null;
+    applyPromotion(b, m.row, m.col, 'q');
+    return !isKingInCheck(b, movingPiece[0]);
+  });
+}
 function hasAny(board, color) { for (let r=0;r<8;r++) for (let c=0;c<8;c++) if (board[r][c]?.[0]===color && getLegalMoves(board, r, c).length) return true; return false; }
+
+
+function closeCyberModal() {
+  const backdrop = document.querySelector('.cyber-modal-backdrop');
+  if (backdrop) backdrop.remove();
+}
+
+function openCyberPrompt({ title, message, defaultValue = '' }) {
+  return new Promise((resolve) => {
+    closeCyberModal();
+    const backdrop = document.createElement('div');
+    backdrop.className = 'cyber-modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="cyber-modal panel-glow" role="dialog" aria-modal="true">
+        <h3>${title}</h3>
+        <p>${message}</p>
+        <input class="cyber-modal-input" type="text" value="${defaultValue}">
+        <div class="cyber-modal-actions">
+          <button type="button" class="btn secondary" data-act="cancel">Cancelar</button>
+          <button type="button" class="btn primary" data-act="ok">Aceptar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(backdrop);
+    const input = backdrop.querySelector('.cyber-modal-input');
+    const finalize = (value) => { closeCyberModal(); resolve(value); };
+    backdrop.querySelector('[data-act="cancel"]').onclick = () => finalize(null);
+    backdrop.querySelector('[data-act="ok"]').onclick = () => finalize(input.value.trim());
+    backdrop.addEventListener('click', (ev) => { if (ev.target === backdrop) finalize(null); });
+    backdrop.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') finalize(null);
+      if (ev.key === 'Enter') finalize(input.value.trim());
+    });
+    input.focus();
+    input.select();
+  });
+}
+
+function openCyberConfirm(message) {
+  return new Promise((resolve) => {
+    closeCyberModal();
+    const backdrop = document.createElement('div');
+    backdrop.className = 'cyber-modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="cyber-modal panel-glow" role="dialog" aria-modal="true">
+        <h3>Confirmación</h3>
+        <p>${message}</p>
+        <div class="cyber-modal-actions">
+          <button type="button" class="btn secondary" data-act="cancel">Cancelar</button>
+          <button type="button" class="btn danger" data-act="ok">Confirmar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(backdrop);
+    const finalize = (value) => { closeCyberModal(); resolve(value); };
+    backdrop.querySelector('[data-act="cancel"]').onclick = () => finalize(false);
+    backdrop.querySelector('[data-act="ok"]').onclick = () => finalize(true);
+    backdrop.addEventListener('click', (ev) => { if (ev.target === backdrop) finalize(false); });
+  });
+}
 
 function clickSquare(row, col) {
   if (state.status.includes('JAQUE MATE')) return;
@@ -156,9 +241,9 @@ function clickSquare(row, col) {
 }
 function selectSquare(row, col) { selected = { row, col }; legalMoves = getLegalMoves(state.board, row, col); render(); }
 
-async function makeMove(fr, fc, tr, tc) {
+async function makeMove(fr, fc, tr, tc, promotionChoice = 'q') {
   const piece = state.board[fr][fc], target = state.board[tr][tc];
-  state.board[tr][tc] = piece; state.board[fr][fc] = null; applyPromotion(state.board, tr, tc);
+  state.board[tr][tc] = piece; state.board[fr][fc] = null; applyPromotion(state.board, tr, tc, promotionChoice);
   if (target) state.captured[piece[0]].push(target);
   state.history.unshift(`${state.moveNumber}. ${algebraic(fr, fc)} → ${algebraic(tr, tc)}`); state.lastMove = `${algebraic(fr, fc)} → ${algebraic(tr, tc)}`;
   state.turn = state.turn === 'w' ? 'b' : 'w'; state.moveNumber += 1; selected = null; legalMoves = [];
@@ -191,11 +276,50 @@ async function pollOnline() {
   if (data?.game_state?.moveNumber && data.game_state.moveNumber > state.moveNumber) { state = data.game_state; render(); }
 }
 
-modeSelectEl.onchange = () => { mode = modeSelectEl.value; render(); if (pollTimer) clearInterval(pollTimer); if (mode === 'online' && roomCode) pollTimer = setInterval(pollOnline, 2000); };
-onlineCreateBtn.onclick = async () => { const r = await fetch('/api/match/create/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ white_player: prompt('Tu nombre', 'White') || 'White' }) }); const d = await r.json(); roomCode = d.room_code; roomInfoEl.innerHTML = `<span>Sala:</span> ${roomCode}`; mode='online'; modeSelectEl.value='online'; render(); pollTimer = setInterval(pollOnline, 2000); await syncOnline(); };
-onlineJoinBtn.onclick = async () => { const code = (prompt('Código de sala') || '').toUpperCase(); if (!code) return; await fetch(`/api/match/${code}/join/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ player_name: prompt('Tu nombre', 'Black') || 'Black' }) }); roomCode = code; mode='online'; modeSelectEl.value='online'; await pollOnline(); roomInfoEl.innerHTML = `<span>Sala:</span> ${roomCode}`; render(); pollTimer = setInterval(pollOnline, 2000); };
 
-newGameBtn.onclick = resetGame; flipBoardBtn.onclick = () => { flipped = !flipped; renderCoordinates(); render(); }; resetViewBtn.onclick = () => { selected = null; legalMoves = []; render(); };
+async function executeCoordinateMove() {
+  const from = parseSquare(commandFromEl?.value || '');
+  const to = parseSquare(commandToEl?.value || '');
+  if (!from || !to) return;
+  const piece = state.board[from.row][from.col];
+  if (!piece || piece[0] !== state.turn) return;
+  const moves = getLegalMoves(state.board, from.row, from.col);
+  const chosen = moves.find((m) => m.row === to.row && m.col === to.col);
+  if (!chosen) return;
+  await makeMove(from.row, from.col, to.row, to.col);
+  commandFromEl.value = '';
+  commandToEl.value = '';
+}
+
+modeSelectEl.onchange = () => { mode = modeSelectEl.value; render(); if (pollTimer) clearInterval(pollTimer); if (mode === 'online' && roomCode) pollTimer = setInterval(pollOnline, 2000); };
+onlineCreateBtn.onclick = async () => {
+  const player = await openCyberPrompt({ title: 'Crear sala', message: 'Ingresá tu alias de jugador', defaultValue: 'White' });
+  if (player === null) return;
+  const r = await fetch('/api/match/create/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ white_player: player || 'White' }) });
+  const d = await r.json();
+  roomCode = d.room_code; roomInfoEl.innerHTML = `<span>Sala:</span> ${roomCode}`; mode='online'; modeSelectEl.value='online'; render();
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollOnline, 2000);
+  await syncOnline();
+};
+onlineJoinBtn.onclick = async () => {
+  const codeInput = await openCyberPrompt({ title: 'Unirse a sala', message: 'Ingresá el código de la sala', defaultValue: '' });
+  const code = (codeInput || '').toUpperCase();
+  if (!code) return;
+  const player = await openCyberPrompt({ title: 'Identidad', message: 'Ingresá tu alias de jugador', defaultValue: 'Black' });
+  if (player === null) return;
+  await fetch(`/api/match/${code}/join/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ player_name: player || 'Black' }) });
+  roomCode = code; mode='online'; modeSelectEl.value='online'; await pollOnline(); roomInfoEl.innerHTML = `<span>Sala:</span> ${roomCode}`; render();
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollOnline, 2000);
+};
+
+newGameBtn.onclick = async () => {
+  const shouldReset = await openCyberConfirm('¿Reiniciar la partida actual?');
+  if (shouldReset) resetGame();
+};
+flipBoardBtn.onclick = () => { flipped = !flipped; renderCoordinates(); render(); };
+resetViewBtn.onclick = () => { selected = null; legalMoves = []; render(); };
 
 if (volumeSliderEl) {
   volumeSliderEl.oninput = () => {
@@ -206,6 +330,20 @@ if (volumeSliderEl) {
   };
   volumeSliderEl.addEventListener('pointerdown', ensureAudioContext);
   volumeSliderEl.addEventListener('keydown', ensureAudioContext);
+}
+
+if (commandFromEl && commandToEl) {
+  const normalize = (el) => {
+    el.value = (el.value || '').toLowerCase().replace(/[^a-h1-8]/g, '').slice(0, 2);
+  };
+  commandFromEl.addEventListener('input', () => normalize(commandFromEl));
+  commandToEl.addEventListener('input', () => normalize(commandToEl));
+  commandFromEl.addEventListener('keydown', async (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); await executeCoordinateMove(); }
+  });
+  commandToEl.addEventListener('keydown', async (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); await executeCoordinateMove(); }
+  });
 }
 
 updateVolumeUI();
