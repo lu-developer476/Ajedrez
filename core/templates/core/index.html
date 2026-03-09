@@ -19,7 +19,7 @@
       <div class="brand-box panel-glow">
         <p class="eyebrow">ARCADE PROTOCOLS</p>
         <h1>CYBORG CHESS<span>ZERO WEST EDITION</span></h1>
-        <p class="tagline">Duelos de tablero en neón: escaramuza local, IA táctica, ranking en la red y salas en tiempo real bajo protocolo Cyberpunk.</p>
+        <p class="tagline">Duelos en tablero de neón con temporizador. ¡Demostrá quién es el mejor, choom!</p>
       </div>
       <div class="stats-grid">
         <article class="stat-card panel-glow"><span class="stat-label">TURNO</span><strong id="turn-indicator">Blancas</strong></article>
@@ -28,6 +28,11 @@
         <article class="stat-card panel-glow small"><span class="stat-label">SELECCIÓN</span><strong id="selection-label">---</strong></article>
         <article class="stat-card panel-glow small"><span class="stat-label">CAPTURAS B</span><strong id="white-captures">0</strong></article>
         <article class="stat-card panel-glow small"><span class="stat-label">CAPTURAS N</span><strong id="black-captures">0</strong></article>
+        <article class="timer-panel panel-glow stat-level-card" aria-label="Temporizador de partida">
+          <p class="eyebrow">Chrono Core</p>
+          <div class="timer-row"><span>Blancas</span><strong id="white-timer">10:00</strong></div>
+          <div class="timer-row"><span>Negras</span><strong id="black-timer">10:00</strong></div>
+        </article>
         <article class="audio-panel panel-glow stat-level-card" aria-label="Panel de sonido">
           <p class="eyebrow">Audio</p>
           <div class="audio-state" id="audio-state">🔊 Sonido activo (100%)</div>
@@ -69,6 +74,28 @@
     <section class="aux-panels">
       <div class="controls panel-glow">
         <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Multijugador online</option></select>
+        <select id="ai-level" class="btn secondary" aria-label="Nivel de IA">
+          <option value="1">IA Nivel 1 · Novato</option>
+          <option value="2">IA Nivel 2 · Callejera</option>
+          <option value="3" selected>IA Nivel 3 · Táctica</option>
+          <option value="4">IA Nivel 4 · Élite</option>
+          <option value="5">IA Nivel 5 · Blackwall</option>
+        </select>
+        <select id="piece-theme" class="btn secondary" aria-label="Estilo de fichas">
+          <option value="medieval" selected>Fichas · Medieval (default)</option>
+          <option value="cibernetico">Fichas · Cibernético</option>
+          <option value="robotico">Fichas · Robótico</option>
+          <option value="androide">Fichas · Androide</option>
+          <option value="techno">Fichas · Techno</option>
+          <option value="merc">Fichas · Merc (Cyberpunk)</option>
+        </select>
+        <select id="board-theme" class="btn secondary" aria-label="Estilo de tablero">
+          <option value="classic" selected>Tablero · Clásico Neon (default)</option>
+          <option value="obsidian">Tablero · Obsidiana</option>
+          <option value="neon-grid">Tablero · Neon Grid</option>
+          <option value="chrome">Tablero · Cromo Industrial</option>
+          <option value="synthwave">Tablero · Synthwave</option>
+        </select>
         <button id="new-game-btn" class="btn primary" type="button">Nueva partida</button>
         <button id="flip-board-btn" class="btn secondary" type="button">Girar tablero</button>
         <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
@@ -76,8 +103,9 @@
         <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
       </div>
       <div class="tips panel-glow">
-        <p><span>Reglas:</span> incluye enroque, captura al paso y promoción manual (si aplica en jugadas).</p>
-        <p><span>Jugadas:</span> mate del pastor, italiana, siciliana y tácticas (clavada, doble ataque).</p>
+        <p><span>Reglas:</span> jaque, jaque mate, tablas, enroque corto/largo, captura al paso, promoción y ahogado.</p>
+        <p><span>Movimientos:</span> peón (1 o 2 inicial + diagonal), torre (líneas), alfil (diagonales), caballo (L), dama (líneas+diagonales), rey (1 casilla + enroque).</p>
+        <p><span>Jugadas:</span> aperturas italiana, siciliana, francesa, gambito de dama, Ruy López; tácticas clavada, doble ataque, descubierta, desviación y rayos X.</p>
         <p id="room-info"><span>Sala:</span> ---</p>
       </div>
       <div class="leaderboard panel-glow">
