@@ -19,7 +19,7 @@
       <div class="brand-box panel-glow">
         <p class="eyebrow">ARCADE PROTOCOLS</p>
         <h1>CYBORG CHESS<span>ZERO WEST EDITION</span></h1>
-        <p class="tagline">Modo local, vs IA (Stockfish/fallback), ranking online y multijugador en tiempo real por sala.</p>
+        <p class="tagline">Duelos de tablero en neón: escaramuza local, IA táctica, ranking en la red y salas en tiempo real bajo protocolo Cyberpunk.</p>
       </div>
       <div class="stats-grid">
         <article class="stat-card panel-glow"><span class="stat-label">TURNO</span><strong id="turn-indicator">Blancas</strong></article>
@@ -48,6 +48,14 @@
           <div class="coordinates coords-left" id="coords-left"></div>
           <div class="board" id="board" aria-label="Tablero de ajedrez"></div>
           <div class="coordinates coords-right" id="coords-right"></div>
+          <aside class="command-panel panel-inline" aria-label="Comandos de jugada por coordenadas">
+            <p class="mini-label">Consola rápida</p>
+            <label for="command-from">Desde</label>
+            <input id="command-from" class="command-input" type="text" maxlength="2" placeholder="e2" autocomplete="off">
+            <label for="command-to">Hasta</label>
+            <input id="command-to" class="command-input" type="text" maxlength="2" placeholder="e4" autocomplete="off">
+            <small>Enter ejecuta el movimiento</small>
+          </aside>
         </div>
         <div class="coordinates coords-bottom" id="coords-bottom"></div>
       </div>

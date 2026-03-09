@@ -209,6 +209,38 @@ body {
 
 .board-main-row { display: flex; align-items: stretch; gap: 10px; }
 
+.command-panel {
+  min-width: 170px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: 6px;
+  border-radius: 18px;
+}
+
+.command-panel label,
+.command-panel small {
+  color: var(--muted);
+  text-align: center;
+}
+
+.command-input {
+  border: 1px solid rgba(255,148,77,0.4);
+  background: rgba(13, 8, 12, 0.75);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  text-transform: lowercase;
+}
+
+.command-input:focus-visible {
+  outline: 2px solid rgba(255, 110, 199, 0.8);
+  outline-offset: 1px;
+}
+
 .coordinates {
   color: var(--muted);
   font-family: 'Orbitron', sans-serif;
@@ -333,9 +365,10 @@ body {
 
 .controls {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   align-content: start;
-  justify-items: center;
+  justify-items: stretch;
 }
 
 .btn {
@@ -355,8 +388,54 @@ body {
 .btn.danger { background: linear-gradient(135deg, #ff7e5f, #ff4e7a); color: #fff3f3; }
 
 #mode-select {
+  grid-column: 1 / -1;
   text-align: center;
   text-align-last: center;
+}
+
+.controls .btn {
+  width: 100%;
+}
+
+.cyber-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(6, 3, 5, 0.78);
+  display: grid;
+  place-items: center;
+  padding: 12px;
+}
+
+.cyber-modal {
+  width: min(440px, 100%);
+  padding: 16px;
+  border-radius: 22px;
+}
+
+.cyber-modal h3 {
+  margin: 0 0 8px;
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.cyber-modal p { margin: 0 0 12px; text-align: center; color: var(--muted); }
+
+.cyber-modal-input {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,148,77,0.36);
+  background: rgba(16, 8, 11, 0.9);
+  color: var(--text);
+  font: inherit;
+}
+
+.cyber-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .tips p { margin: 0 0 12px; color: var(--muted); }
@@ -479,6 +558,8 @@ body {
   .hud { max-width: 760px; margin: 0 auto; width: 100%; }
   .aux-panels { grid-template-columns: 1fr; }
   .board-info { grid-template-columns: 1fr; }
+  .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #mode-select { grid-column: 1 / -1; }
 }
 
 @media (max-width: 720px) {
@@ -489,4 +570,6 @@ body {
   .coords-top, .coords-bottom { margin-left: 30px; }
   .piece { font-size: clamp(1.55rem, 7vw, 2.2rem); }
   .footer { font-size: 0.86rem; }
+  .command-panel { min-width: 140px; }
+  .controls { grid-template-columns: 1fr; }
 }
