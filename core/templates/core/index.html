@@ -17,7 +17,7 @@
   <main class="game-shell">
     <section class="hud">
       <div class="brand-box panel-glow">
-        <p class="eyebrow">HUNTING SUBROUTINES</p>
+        <p class="eyebrow">ARCADE PROTOCOLS</p>
         <h1>CYBORG CHESS<span>ZERO WEST EDITION</span></h1>
         <p class="tagline">Modo local, vs IA (Stockfish/fallback), ranking online y multijugador en tiempo real por sala.</p>
       </div>
@@ -28,12 +28,18 @@
         <article class="stat-card panel-glow small"><span class="stat-label">SELECCIÓN</span><strong id="selection-label">---</strong></article>
         <article class="stat-card panel-glow small"><span class="stat-label">CAPTURAS B</span><strong id="white-captures">0</strong></article>
         <article class="stat-card panel-glow small"><span class="stat-label">CAPTURAS N</span><strong id="black-captures">0</strong></article>
+        <article class="audio-panel panel-glow stat-level-card" aria-label="Panel de sonido">
+          <p class="eyebrow">Audio</p>
+          <div class="audio-state" id="audio-state">🔊 Sonido activo (100%)</div>
+          <label for="volume-slider" class="audio-label">Volumen</label>
+          <input id="volume-slider" class="volume-slider" type="range" min="0" max="100" value="100" aria-label="Control de volumen">
+        </article>
       </div>
     </section>
 
     <section class="arena panel-glow">
       <div class="board-topbar">
-        <div><p class="eyebrow">BOARD LINK</p><h2>Tablero de caza</h2></div>
+        <div><h2>Tablero</h2></div>
         <div class="legend-inline"><span><i class="dot dot-light"></i>Casilla clara</span><span><i class="dot dot-dark"></i>Casilla oscura</span></div>
       </div>
       <div class="board-wrap">
@@ -60,12 +66,6 @@
         <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
         <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
         <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
-      </div>
-      <div class="audio-panel panel-glow" aria-label="Panel de sonido">
-        <p class="eyebrow">Audio</p>
-        <div class="audio-state" id="audio-state">🔊 Sonido activo (100%)</div>
-        <label for="volume-slider" class="audio-label">Volumen</label>
-        <input id="volume-slider" class="volume-slider" type="range" min="0" max="100" value="100" aria-label="Control de volumen">
       </div>
       <div class="tips panel-glow">
         <p><span>Reglas:</span> incluye enroque, captura al paso y promoción manual (si aplica en jugadas).</p>
