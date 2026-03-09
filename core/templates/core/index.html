@@ -11,69 +11,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'core/css/styles.css' %}">
   <link rel="icon" type="image/png" href="{% static 'core/favicon.png' %}">
-  <link rel="apple-touch-icon" href="{% static 'core/favicon.png' %}">
 </head>
 <body>
   <div class="noise"></div>
-
   <main class="game-shell">
     <section class="hud">
       <div class="brand-box panel-glow">
         <p class="eyebrow">HUNTING SUBROUTINES</p>
         <h1>CYBORG CHESS<span>ZERO WEST EDITION</span></h1>
-        <p class="tagline">Ajedrez táctico con estética neón rosa y naranja. Mantén el panel izquierdo, domina el tablero y no regales la reina como si fuera un peón deprimido.</p>
+        <p class="tagline">Modo local, vs IA (Stockfish/fallback), ranking online y multijugador en tiempo real por sala.</p>
       </div>
-
       <div class="stats-grid">
-        <article class="stat-card panel-glow">
-          <span class="stat-label">TURNO</span>
-          <strong id="turn-indicator">Blancas</strong>
-        </article>
-
-        <article class="stat-card panel-glow">
-          <span class="stat-label">ESTADO</span>
-          <strong id="status-text">EN CURSO</strong>
-        </article>
-
-        <article class="stat-card panel-glow small">
-          <span class="stat-label">JUGADA</span>
-          <strong id="move-counter">1</strong>
-        </article>
-
-        <article class="stat-card panel-glow small">
-          <span class="stat-label">SELECCIÓN</span>
-          <strong id="selection-label">---</strong>
-        </article>
-
-        <article class="stat-card panel-glow small">
-          <span class="stat-label">CAPTURAS B</span>
-          <strong id="white-captures">0</strong>
-        </article>
-
-        <article class="stat-card panel-glow small">
-          <span class="stat-label">CAPTURAS N</span>
-          <strong id="black-captures">0</strong>
-        </article>
-
-        <article class="stat-card panel-glow small stat-level-card">
-          <span class="stat-label">REY EN RIESGO</span>
-          <strong id="check-alert" class="level-display">NINGUNO</strong>
-        </article>
+        <article class="stat-card panel-glow"><span class="stat-label">TURNO</span><strong id="turn-indicator">Blancas</strong></article>
+        <article class="stat-card panel-glow"><span class="stat-label">ESTADO</span><strong id="status-text">EN CURSO</strong></article>
+        <article class="stat-card panel-glow small"><span class="stat-label">JUGADA</span><strong id="move-counter">1</strong></article>
+        <article class="stat-card panel-glow small"><span class="stat-label">SELECCIÓN</span><strong id="selection-label">---</strong></article>
+        <article class="stat-card panel-glow small"><span class="stat-label">CAPTURAS B</span><strong id="white-captures">0</strong></article>
+        <article class="stat-card panel-glow small"><span class="stat-label">CAPTURAS N</span><strong id="black-captures">0</strong></article>
       </div>
     </section>
 
     <section class="arena panel-glow">
       <div class="board-topbar">
-        <div>
-          <p class="eyebrow">BOARD LINK</p>
-          <h2>Tablero de caza</h2>
-        </div>
-        <div class="legend-inline">
-          <span><i class="dot dot-light"></i>Casilla clara</span>
-          <span><i class="dot dot-dark"></i>Casilla oscura</span>
-        </div>
+        <div><p class="eyebrow">BOARD LINK</p><h2>Tablero de caza</h2></div>
+        <div class="legend-inline"><span><i class="dot dot-light"></i>Casilla clara</span><span><i class="dot dot-dark"></i>Casilla oscura</span></div>
       </div>
-
       <div class="board-wrap">
         <div class="coordinates coords-top" id="coords-top"></div>
         <div class="board-main-row">
@@ -83,58 +45,36 @@
         </div>
         <div class="coordinates coords-bottom" id="coords-bottom"></div>
       </div>
-
       <div class="board-info panel-inline">
-        <div>
-          <span class="mini-label">Último movimiento</span>
-          <strong id="last-move">---</strong>
-        </div>
-        <div>
-          <span class="mini-label">Promoción</span>
-          <strong>Automática a Reina</strong>
-        </div>
-        <div>
-          <span class="mini-label">Modo</span>
-          <strong>Local 1v1</strong>
-        </div>
+        <div><span class="mini-label">Último movimiento</span><strong id="last-move">---</strong></div>
+        <div><span class="mini-label">Promoción manual</span><strong id="promotion-mode">Reina/torre/alfil/caballo</strong></div>
+        <div><span class="mini-label">Modo</span><strong id="mode-label">Local 1v1</strong></div>
       </div>
     </section>
 
     <section class="aux-panels">
       <div class="controls panel-glow">
+        <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Multijugador online</option></select>
         <button id="new-game-btn" class="btn primary" type="button">Nueva partida</button>
         <button id="flip-board-btn" class="btn secondary" type="button">Girar tablero</button>
         <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
+        <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
+        <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
       </div>
-
       <div class="tips panel-glow">
-        <p><span>Controles:</span> clic para seleccionar y clic para mover.</p>
-        <p><span>Reglas:</span> movimientos base completos, promoción automática y detección de jaque. Sin enroque ni captura al paso en esta edición.</p>
+        <p><span>Reglas:</span> incluye enroque, captura al paso y promoción manual (si aplica en jugadas).</p>
+        <p><span>Jugadas:</span> mate del pastor, italiana, siciliana y tácticas (clavada, doble ataque).</p>
+        <p id="room-info"><span>Sala:</span> ---</p>
       </div>
-
       <div class="leaderboard panel-glow">
-        <div class="leaderboard-header">
-          <p class="eyebrow">TACTICAL FEED</p>
-          <h2>Historial de movimientos</h2>
-        </div>
+        <div class="leaderboard-header"><p class="eyebrow">TACTICAL FEED</p><h2>Historial & Ranking online</h2></div>
         <ol id="move-history" class="move-history"></ol>
+        <ol id="ranking-list" class="move-history"></ol>
       </div>
     </section>
   </main>
-
-  <footer class="footer">
-    <span class="footer-item">© <span id="year"></span> Todos los derechos reservados</span>
-    <span class="footer-separator" aria-hidden="true">•</span>
-    <span class="footer-item">Built with Python &amp; Django</span>
-    <span class="footer-separator" aria-hidden="true">•</span>
-    <span class="footer-item">UX/UI Interface</span>
-    <span class="footer-separator" aria-hidden="true">•</span>
-    <span class="footer-item">Deployed on Render ®</span>
-  </footer>
-
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
-  <script src="{% static 'core/js/game.js' %}?v=cyborg-chess-v1"></script>
+  <footer class="footer"><span class="footer-item">© <span id="year"></span> Cyborg Chess</span></footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script src="{% static 'core/js/game.js' %}?v=cyborg-chess-v2"></script>
 </body>
 </html>
