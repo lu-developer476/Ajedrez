@@ -78,12 +78,12 @@ const TRAINING_VARIATIONS = [
 
 const TUTORIAL_ITEMS = [
   { title: 'Reglas', text: 'Jaque, jaque mate, tablas, enroque corto/largo, captura al paso, promoción y ahogado.' },
-  { title: 'Peón', text: 'Avanza 1 casilla (o 2 desde inicio), captura en diagonal y puede promocionar al llegar al final.' },
-  { title: 'Torre', text: 'Se mueve en líneas rectas (filas y columnas) todas las casillas libres.' },
-  { title: 'Alfil', text: 'Se mueve en diagonales, tantas casillas como estén disponibles.' },
-  { title: 'Caballo', text: 'Movimiento en L y puede saltar piezas.' },
-  { title: 'Dama', text: 'Combina movimientos de torre y alfil, con gran alcance.' },
-  { title: 'Rey', text: 'Avanza una casilla en cualquier dirección y puede enrocarse.' },
+  { title: 'Peón', text: 'Avanza 1 casilla (o 2 desde inicio), captura en diagonal y puede promocionar al llegar al final. Jugada ejemplo: e2 → e4 (avance doble inicial).' },
+  { title: 'Torre', text: 'Se mueve en líneas rectas (filas y columnas) todas las casillas libres. Jugada ejemplo: a1 → a4.' },
+  { title: 'Alfil', text: 'Se mueve en diagonales, tantas casillas como estén disponibles. Jugada ejemplo: c1 → g5.' },
+  { title: 'Caballo', text: 'Movimiento en L y puede saltar piezas. Jugada ejemplo: g1 → f3.' },
+  { title: 'Dama', text: 'Combina movimientos de torre y alfil, con gran alcance. Jugada ejemplo: d1 → h5.' },
+  { title: 'Rey', text: 'Avanza una casilla en cualquier dirección y puede enrocarse. Jugada ejemplo: e1 → g1 (enroque corto).' },
 ];
 
 const PIECE_SETS = {
@@ -112,7 +112,7 @@ let audioCtx = null;
 let masterGain = null;
 let volume = 1;
 let aiLevel = 3;
-let pieceTheme = 'humano';
+let pieceTheme = 'retro';
 let pieceColorTheme = 'original';
 let boardTheme = 'classic';
 let fontTheme = 'rajdhani';
@@ -124,13 +124,14 @@ let isPaused = false;
 let audioEnabled = true;
 let showAttackedSquares = false;
 let coordinateStyle = 'clasico';
-let moveAnimationStyle = 'deslizante';
+let moveAnimationStyle = 'instantanea';
 let captureAnimationStyle = 'desvanecimiento';
-let enablePromotionAnimation = true;
-let enableCheckAnimation = true;
-let enableLastMoveAnimation = true;
+let enablePromotionAnimation = false;
+let enableCheckAnimation = false;
+let enableLastMoveAnimation = false;
 let highlightLastMove = null;
 let activeVariations = new Set(TRAINING_VARIATIONS);
+let waitingStartColor = true;
 
 function createInitialBoard() { return [['br','bn','bb','bq','bk','bb','bn','br'],['bp','bp','bp','bp','bp','bp','bp','bp'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['wp','wp','wp','wp','wp','wp','wp','wp'],['wr','wn','wb','wq','wk','wb','wn','wr']]; }
 function createState() { return { board: createInitialBoard(), turn: 'w', moveNumber: 1, history: [], captured: { w: [], b: [] }, lastMove: null, status: 'EN CURSO', captureFX: null, promotionFX: null }; }
@@ -155,7 +156,8 @@ function resetGame() {
   blackTimeLeft = 600;
   isPaused = false;
   highlightLastMove = null;
-  startTimerLoop();
+  if (waitingStartColor) stopTimerLoop();
+  else startTimerLoop();
   renderCoordinates();
   render();
 }
@@ -404,18 +406,12 @@ function updateVariationUI() {
 }
 
 async function openTutorialModal() {
-  closeCyberModal();
-  const backdrop = document.createElement('div');
-  backdrop.className = 'cyber-modal-backdrop';
-  backdrop.innerHTML = `
-    <div class="cyber-modal panel-glow" role="dialog" aria-modal="true">
-      <h3>Tutorial</h3>
-      <div class="tutorial-list">${TUTORIAL_ITEMS.map((item) => `<p><span>${item.title}:</span> ${item.text}</p>`).join('')}</div>
-      <div class="cyber-modal-actions">
-        <button type="button" class="btn primary" data-act="ok">Entendido</button>
-      </div>
-    </div>`;
-  document.body.appendChild(backdrop);
+  const backdrop = openCyberModal({
+    title: 'Tutorial',
+    className: 'cyber-modal-centered',
+    body: `<div class="tutorial-list">${TUTORIAL_ITEMS.map((item) => `<p><span>${item.title}:</span> ${item.text}</p>`).join('')}</div>`,
+    actions: '<button type="button" class="btn primary" data-act="ok">Entendido</button>',
+  });
   backdrop.querySelector('[data-act="ok"]').onclick = () => closeCyberModal();
   backdrop.addEventListener('click', (ev) => { if (ev.target === backdrop) closeCyberModal(); });
 }
@@ -467,7 +463,7 @@ function render() {
     const p = state.board[row][col];
     if (p) {
       const sp = document.createElement('span');
-      const sideLabel = p[0] === 'w' ? 'Blancas' : 'Negras';
+      const sideLabel = p[0] === 'w' ? 'BLANCAS' : 'NEGRAS';
       const pieceLabel = PIECE_NAMES[p[1]] || 'Ficha';
       sq.dataset.pieceName = `${pieceLabel} · ${sideLabel}`;
       sq.setAttribute('aria-label', `${pieceLabel} ${sideLabel} en ${algebraic(row, col)}`);
@@ -487,7 +483,7 @@ function render() {
     boardEl.appendChild(sq);
   }
 
-  turnIndicatorEl.textContent = state.turn === 'w' ? 'Blancas' : 'Negras';
+  turnIndicatorEl.textContent = state.turn === 'w' ? 'BLANCAS' : 'NEGRAS';
   statusTextEl.textContent = state.status;
   moveCounterEl.textContent = state.moveNumber;
   selectionLabelEl.textContent = selected ? algebraic(selected.row, selected.col) : '---';
@@ -537,22 +533,29 @@ function closeCyberModal() {
   if (backdrop) backdrop.remove();
 }
 
+function openCyberModal({ title, body = '', actions = '', className = '' }) {
+  closeCyberModal();
+  const backdrop = document.createElement('div');
+  backdrop.className = 'cyber-modal-backdrop';
+  backdrop.innerHTML = `
+    <div class="cyber-modal panel-glow ${className}" role="dialog" aria-modal="true">
+      <h3>${title}</h3>
+      ${body}
+      <div class="cyber-modal-actions">${actions}</div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  return backdrop;
+}
+
 function openCyberPrompt({ title, message, defaultValue = '' }) {
   return new Promise((resolve) => {
-    closeCyberModal();
-    const backdrop = document.createElement('div');
-    backdrop.className = 'cyber-modal-backdrop';
-    backdrop.innerHTML = `
-      <div class="cyber-modal panel-glow" role="dialog" aria-modal="true">
-        <h3>${title}</h3>
-        <p>${message}</p>
-        <input class="cyber-modal-input" type="text" value="${defaultValue}">
-        <div class="cyber-modal-actions">
-          <button type="button" class="btn secondary" data-act="cancel">Cancelar</button>
-          <button type="button" class="btn primary" data-act="ok">Aceptar</button>
-        </div>
-      </div>`;
-    document.body.appendChild(backdrop);
+    const backdrop = openCyberModal({
+      title,
+      body: `<p>${message}</p><input class="cyber-modal-input" type="text" value="${defaultValue}">`,
+      actions: `
+        <button type="button" class="btn secondary" data-act="cancel">Cancelar</button>
+        <button type="button" class="btn primary" data-act="ok">Aceptar</button>`,
+    });
     const input = backdrop.querySelector('.cyber-modal-input');
     const finalize = (value) => { closeCyberModal(); resolve(value); };
     backdrop.querySelector('[data-act="cancel"]').onclick = () => finalize(null);
@@ -569,19 +572,13 @@ function openCyberPrompt({ title, message, defaultValue = '' }) {
 
 function openCyberConfirm(message) {
   return new Promise((resolve) => {
-    closeCyberModal();
-    const backdrop = document.createElement('div');
-    backdrop.className = 'cyber-modal-backdrop';
-    backdrop.innerHTML = `
-      <div class="cyber-modal panel-glow" role="dialog" aria-modal="true">
-        <h3>Confirmación</h3>
-        <p>${message}</p>
-        <div class="cyber-modal-actions">
-          <button type="button" class="btn secondary" data-act="cancel">Cancelar</button>
-          <button type="button" class="btn danger" data-act="ok">Confirmar</button>
-        </div>
-      </div>`;
-    document.body.appendChild(backdrop);
+    const backdrop = openCyberModal({
+      title: 'Confirmación',
+      body: `<p>${message}</p>`,
+      actions: `
+        <button type="button" class="btn secondary" data-act="cancel">Cancelar</button>
+        <button type="button" class="btn danger" data-act="ok">Confirmar</button>`,
+    });
     const finalize = (value) => { closeCyberModal(); resolve(value); };
     backdrop.querySelector('[data-act="cancel"]').onclick = () => finalize(false);
     backdrop.querySelector('[data-act="ok"]').onclick = () => finalize(true);
@@ -593,24 +590,17 @@ function openCyberConfirm(message) {
 
 function openPromotionSelector(color) {
   return new Promise((resolve) => {
-    closeCyberModal();
     const options = [
       { key: 'q', label: 'Reina' },
       { key: 'r', label: 'Torre' },
       { key: 'b', label: 'Alfil' },
       { key: 'n', label: 'Caballo' },
     ];
-    const backdrop = document.createElement('div');
-    backdrop.className = 'cyber-modal-backdrop';
-    backdrop.innerHTML = `
-      <div class="cyber-modal panel-glow" role="dialog" aria-modal="true">
-        <h3>Promoción de peón</h3>
-        <p>${color === 'w' ? 'Blancas' : 'Negras'}: elegí la pieza para promocionar.</p>
-        <div class="cyber-modal-actions">
-          ${options.map((opt) => `<button type="button" class="btn secondary" data-piece="${opt.key}">${opt.label}</button>`).join('')}
-        </div>
-      </div>`;
-    document.body.appendChild(backdrop);
+    const backdrop = openCyberModal({
+      title: 'Promoción de peón',
+      body: `<p>${color === 'w' ? 'BLANCAS' : 'NEGRAS'}: elegí la pieza para promocionar.</p>`,
+      actions: options.map((opt) => `<button type="button" class="btn secondary" data-piece="${opt.key}">${opt.label}</button>`).join(''),
+    });
     backdrop.querySelectorAll('[data-piece]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const piece = btn.getAttribute('data-piece') || 'q';
@@ -623,7 +613,7 @@ function openPromotionSelector(color) {
 
 function clickSquare(row, col) {
   evaluateGameStatus();
-  if (isPaused || state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
+  if (waitingStartColor || isPaused || state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
   const piece = state.board[row][col];
   if (selected) {
     const chosen = legalMoves.find((m) => m.row === row && m.col === col);
@@ -657,7 +647,7 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
     state.captured[piece[0]].push(target);
     state.captureFX = { row: tr, col: tc, piece: piece[1] };
   } else state.captureFX = null;
-  const sideText = piece[0] === 'w' ? 'Blancas' : 'Negras';
+  const sideText = piece[0] === 'w' ? 'BLANCAS' : 'NEGRAS';
   const pieceName = PIECE_NAMES[piece[1]] || 'Ficha';
   state.history.unshift(`${sideText}: ${pieceName} ${state.moveNumber}. ${algebraic(fr, fc)} → ${algebraic(tr, tc)}`);
   state.lastMove = `${algebraic(fr, fc)} → ${algebraic(tr, tc)}`;
@@ -712,16 +702,53 @@ async function pollOnline() {
 async function executeCoordinateMove() {
   const from = parseSquare(commandFromEl?.value || '');
   const to = parseSquare(commandToEl?.value || '');
-  if (!from || !to) return;
+  if (!from || !to || waitingStartColor) return;
   const piece = state.board[from.row][from.col];
   if (!piece || piece[0] !== state.turn) return;
   const moves = getLegalMoves(state.board, from.row, from.col);
   const chosen = moves.find((m) => m.row === to.row && m.col === to.col);
   if (!chosen) return;
-  if (isPaused || state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
+  if (waitingStartColor || isPaused || state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
   await makeMove(from.row, from.col, to.row, to.col, null);
   commandFromEl.value = '';
   commandToEl.value = '';
+}
+
+function setInitialBoardTurn(color) {
+  if (color === 'b') {
+    state.turn = 'b';
+    state.moveNumber = 1;
+  } else {
+    state.turn = 'w';
+  }
+}
+
+function askStartColor() {
+  return new Promise((resolve) => {
+    const backdrop = openCyberModal({
+      title: 'Inicio de partida',
+      className: 'cyber-modal-centered',
+      body: '<p>¿Con qué color de piezas querés empezar la partida?</p>',
+      actions: `
+        <button type="button" class="btn primary" data-color="w">BLANCAS</button>
+        <button type="button" class="btn secondary" data-color="b">NEGRAS</button>`,
+    });
+    const finish = (color) => {
+      closeCyberModal();
+      resolve(color);
+    };
+    backdrop.querySelectorAll('[data-color]').forEach((btn) => {
+      btn.addEventListener('click', () => finish(btn.getAttribute('data-color') || 'w'));
+    });
+  });
+}
+
+async function beginMatchFlow() {
+  const startingColor = await askStartColor();
+  setInitialBoardTurn(startingColor);
+  waitingStartColor = false;
+  startTimerLoop();
+  render();
 }
 
 modeSelectEl.onchange = () => {
@@ -737,7 +764,7 @@ if (boardThemeEl) boardThemeEl.onchange = () => { boardTheme = boardThemeEl.valu
 if (fontThemeEl) fontThemeEl.onchange = () => { fontTheme = fontThemeEl.value || 'rajdhani'; render(); };
 if (fontColorsEl) fontColorsEl.onchange = () => { fontColorTheme = fontColorsEl.value || 'default'; render(); };
 if (coordinateStyleEl) coordinateStyleEl.onchange = () => { coordinateStyle = coordinateStyleEl.value || 'clasico'; renderCoordinates(); render(); };
-if (moveAnimationEl) moveAnimationEl.onchange = () => { moveAnimationStyle = moveAnimationEl.value || 'deslizante'; render(); };
+if (moveAnimationEl) moveAnimationEl.onchange = () => { moveAnimationStyle = moveAnimationEl.value || 'instantanea'; render(); };
 if (captureAnimationEl) captureAnimationEl.onchange = () => { captureAnimationStyle = captureAnimationEl.value || 'desvanecimiento'; render(); };
 
 onlineCreateBtn.onclick = async () => {
@@ -782,13 +809,13 @@ onlineJoinBtn.onclick = async () => {
 
 newGameBtn.onclick = async () => {
   const shouldReset = await openCyberConfirm('¿Iniciar una nueva partida?');
-  if (shouldReset) resetGame();
+  if (shouldReset) { waitingStartColor = true; resetGame(); beginMatchFlow(); }
 };
 
 if (restartGameBtn) {
   restartGameBtn.onclick = async () => {
     const shouldReset = await openCyberConfirm('¿Reiniciar partida y volver al estado inicial?');
-    if (shouldReset) resetGame();
+    if (shouldReset) { waitingStartColor = true; resetGame(); beginMatchFlow(); }
   };
 }
 
@@ -811,16 +838,20 @@ resetViewBtn.onclick = () => {
 
 if (openTutorialPanelBtnEl) openTutorialPanelBtnEl.onclick = () => openTutorialModal();
 if (openVariationsBtnEl) openVariationsBtnEl.onclick = () => configureVariations();
-if (toggleAllVariationsBtnEl) {
-  toggleAllVariationsBtnEl.onclick = () => {
+const variationButtons = [
+  [toggleAllVariationsBtnEl, () => {
     activeVariations = activeVariations.size === TRAINING_VARIATIONS.length ? new Set() : new Set(TRAINING_VARIATIONS);
     updateVariationUI();
-  };
-}
-if (toggleAttacksBtnEl) toggleAttacksBtnEl.onclick = () => { showAttackedSquares = !showAttackedSquares; render(); };
-if (togglePromotionAnimationBtnEl) togglePromotionAnimationBtnEl.onclick = () => { enablePromotionAnimation = !enablePromotionAnimation; render(); };
-if (toggleCheckAnimationBtnEl) toggleCheckAnimationBtnEl.onclick = () => { enableCheckAnimation = !enableCheckAnimation; render(); };
-if (toggleLastMoveAnimationBtnEl) toggleLastMoveAnimationBtnEl.onclick = () => { enableLastMoveAnimation = !enableLastMoveAnimation; render(); };
+  }],
+  [toggleAttacksBtnEl, () => { showAttackedSquares = !showAttackedSquares; render(); }],
+  [togglePromotionAnimationBtnEl, () => { enablePromotionAnimation = !enablePromotionAnimation; render(); }],
+  [toggleCheckAnimationBtnEl, () => { enableCheckAnimation = !enableCheckAnimation; render(); }],
+  [toggleLastMoveAnimationBtnEl, () => { enableLastMoveAnimation = !enableLastMoveAnimation; render(); }],
+];
+variationButtons.forEach(([btn, handler]) => {
+  if (!btn) return;
+  btn.onclick = handler;
+});
 if (toggleAudioBtnEl) {
   toggleAudioBtnEl.onclick = () => {
     audioEnabled = !audioEnabled;
@@ -865,6 +896,7 @@ updateVolumeUI();
 updateVariationUI();
 updateBoardLegendDots();
 resetGame();
+beginMatchFlow();
 loadRanking();
 
 

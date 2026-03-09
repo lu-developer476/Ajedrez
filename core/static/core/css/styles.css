@@ -773,6 +773,17 @@ body {
 
 .cyber-modal p { margin: 0 0 12px; text-align: center; color: var(--muted); }
 
+
+.cyber-modal-centered h3,
+.cyber-modal-centered p,
+.cyber-modal-centered .tutorial-list p {
+  text-align: center;
+}
+
+.cyber-modal-centered .tutorial-list p {
+  margin-bottom: 12px;
+}
+
 .tutorial-list { max-height: 45vh; overflow: auto; padding-right: 4px; }
 .tutorial-list p { text-align: left; margin-bottom: 10px; }
 .tutorial-list span { color: var(--accent-3); font-weight: 700; }
@@ -999,6 +1010,20 @@ body {
 
 @media (max-width: 1120px) {
   .board-main-row { flex-wrap: wrap; }
+  .command-panel .mini-label {
+    font-size: 0.92rem;
+    letter-spacing: 0.22em;
+  }
+  .leaderboard-compact .leaderboard-header .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+  }
+  .leaderboard-compact .leaderboard-header h2 {
+    font-size: 1rem;
+  }
+  .leaderboard-compact .move-history {
+    max-height: 130px;
+  }
   .footer {
     justify-content: center;
     text-align: center;

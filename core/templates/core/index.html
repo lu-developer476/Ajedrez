@@ -22,7 +22,7 @@
         <p class="tagline">Duelos en tablero de neón con temporizador. ¡Demostrá quién es el mejor, choom!</p>
       </div>
       <div class="stats-grid">
-        <article class="stat-card panel-glow"><span class="stat-label">TURNO</span><strong id="turn-indicator">Blancas</strong></article>
+        <article class="stat-card panel-glow"><span class="stat-label">TURNO</span><strong id="turn-indicator">BLANCAS</strong></article>
         <article class="stat-card panel-glow"><span class="stat-label">ESTADO</span><strong id="status-text">EN CURSO</strong></article>
         <article class="stat-card panel-glow small"><span class="stat-label">JUGADA</span><strong id="move-counter">1</strong></article>
         <article class="stat-card panel-glow small"><span class="stat-label">SELECCIÓN</span><strong id="selection-label">---</strong></article>
@@ -30,8 +30,8 @@
         <article class="stat-card panel-glow small"><span class="stat-label">CAPTURAS N</span><strong id="black-captures">0</strong></article>
         <article class="timer-panel panel-glow stat-level-card" aria-label="Temporizador de partida">
           <p class="eyebrow">Temporizador</p>
-          <div class="timer-row"><span>Blancas</span><strong id="white-timer">10:00</strong></div>
-          <div class="timer-row"><span>Negras</span><strong id="black-timer">10:00</strong></div>
+          <div class="timer-row"><span>BLANCAS</span><strong id="white-timer">10:00</strong></div>
+          <div class="timer-row"><span>NEGRAS</span><strong id="black-timer">10:00</strong></div>
         </article>
         <article class="audio-panel panel-glow stat-level-card" aria-label="Panel de sonido">
           <p class="eyebrow">Audio</p>
@@ -85,8 +85,8 @@
           <option value="5">IA Nivel 5 · Blackwall</option>
         </select>
         <select id="piece-theme" class="btn secondary" aria-label="Estilo de fichas">
-          <option value="retro">Fichas · Retro</option>
-          <option value="humano" selected>Fichas · Medieval</option>
+          <option value="retro" selected>Fichas · Retro</option>
+          <option value="humano">Fichas · Medieval</option>
           <option value="cyborg">Fichas · Cyborg</option>
         </select>
         <select id="piece-colors" class="btn secondary" aria-label="Paleta de color de fichas">
@@ -108,21 +108,21 @@
           <option value="cinzel">Letras · Cinzel</option>
         </select>
         <select id="font-colors" class="btn secondary" aria-label="Color de letras">
-          <option value="default" selected>Tipografía · Default</option>
+          <option value="default" selected>Tipografía · Clásico</option>
           <option value="warm">Tipografía · Cálida</option>
           <option value="ice">Tipografía · Ice</option>
           <option value="neon">Tipografía · Neón</option>
         </select>
         <select id="coordinate-style" class="btn secondary" aria-label="Estilo de coordenadas">
-          <option value="clasico" selected>Coordenadas · Clásico</option>
+          <option value="clasico" selected>Coordenadas · Clásica</option>
           <option value="minimalista">Coordenadas · Minimalista</option>
           <option value="integrado">Coordenadas · Integrado</option>
           <option value="futurista">Coordenadas · Futurista</option>
           <option value="entrenamiento">Coordenadas · Entrenamiento</option>
         </select>
-        <select id="move-animation" class="btn secondary" aria-label="Animación de movimiento">
-          <option value="instantanea">Animación mov. · Instantánea</option>
-          <option value="deslizante" selected>Animación mov. · Deslizante</option>
+        <select id="move-animation" class="btn secondary" aria-label="Animación">
+          <option value="instantanea" selected>Animación · Instantánea</option>
+          <option value="deslizante">Animación · Deslizante</option>
         </select>
         <select id="capture-animation" class="btn secondary" aria-label="Animación de captura">
           <option value="desvanecimiento" selected>Captura · Desvanecimiento</option>
@@ -153,9 +153,9 @@
           <button id="open-variations-btn" class="btn secondary" type="button">Elegir jugadas activas</button>
           <button id="toggle-all-variations-btn" class="btn secondary" type="button">Desactivar todas</button>
           <button id="toggle-attacks-btn" class="btn secondary" type="button">Casillas atacadas: OFF</button>
-          <button id="toggle-promotion-animation-btn" class="btn secondary" type="button">Animación promoción: ON</button>
-          <button id="toggle-check-animation-btn" class="btn secondary" type="button">Animación jaque: ON</button>
-          <button id="toggle-last-move-animation-btn" class="btn secondary" type="button">Animación última jugada: ON</button>
+          <button id="toggle-promotion-animation-btn" class="btn secondary" type="button">Animación promoción: OFF</button>
+          <button id="toggle-check-animation-btn" class="btn secondary" type="button">Animación jaque: OFF</button>
+          <button id="toggle-last-move-animation-btn" class="btn secondary" type="button">Animación última jugada: OFF</button>
           <button id="toggle-audio-btn" class="btn secondary" type="button">Audio: ON</button>
         </div>
         <p id="room-info"><span>Sala:</span> ---</p>
