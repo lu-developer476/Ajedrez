@@ -53,13 +53,20 @@
           <div class="coordinates coords-left" id="coords-left"></div>
           <div class="board" id="board" aria-label="Tablero de ajedrez"></div>
           <div class="coordinates coords-right" id="coords-right"></div>
-          <aside class="command-panel panel-inline" aria-label="Comandos de jugada por coordenadas">
-            <p class="mini-label">Consola rápida</p>
-            <label for="command-from">Desde</label>
-            <input id="command-from" class="command-input" type="text" maxlength="2" placeholder="e2" autocomplete="off">
-            <label for="command-to">Hasta</label>
-            <input id="command-to" class="command-input" type="text" maxlength="2" placeholder="e4" autocomplete="off">
-            <small>Enter ejecuta el movimiento</small>
+          <aside class="side-stack" aria-label="Panel lateral de comandos e historial">
+            <div class="command-panel panel-inline" aria-label="Comandos de jugada por coordenadas">
+              <p class="mini-label">Consola rápida</p>
+              <label for="command-from">Desde</label>
+              <input id="command-from" class="command-input" type="text" maxlength="2" placeholder="e2" autocomplete="off">
+              <label for="command-to">Hasta</label>
+              <input id="command-to" class="command-input" type="text" maxlength="2" placeholder="e4" autocomplete="off">
+              <small>Enter ejecuta el movimiento</small>
+            </div>
+            <div class="leaderboard panel-inline leaderboard-compact">
+              <div class="leaderboard-header"><p class="eyebrow">TACTICAL FEED</p><h2>Historial & Ranking online</h2></div>
+              <ol id="move-history" class="move-history"></ol>
+              <ol id="ranking-list" class="move-history"></ol>
+            </div>
           </aside>
         </div>
         <div class="coordinates coords-bottom" id="coords-bottom"></div>
@@ -69,11 +76,7 @@
         <div><span class="mini-label">Promoción manual</span><strong id="promotion-mode">Reina/torre/alfil/caballo</strong></div>
         <div><span class="mini-label">Modo</span><strong id="mode-label">Local 1v1</strong></div>
       </div>
-    </section>
-
-    <section class="aux-panels">
-      <div class="controls panel-glow">
-        <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Multijugador online</option></select>
+      <div class="theme-selects panel-inline">
         <select id="ai-level" class="btn secondary" aria-label="Nivel de IA">
           <option value="1">IA Nivel 1 · Novato</option>
           <option value="2">IA Nivel 2 · Callejera</option>
@@ -97,6 +100,12 @@
           <option value="chrome">Tablero · Cromo Industrial</option>
           <option value="synthwave">Tablero · Synthwave</option>
         </select>
+      </div>
+    </section>
+
+    <section class="aux-panels">
+      <div class="controls panel-glow">
+        <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Multijugador online</option></select>
         <button id="new-game-btn" class="btn primary" type="button">Nueva partida</button>
         <button id="flip-board-btn" class="btn secondary" type="button">Girar tablero</button>
         <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
@@ -108,11 +117,6 @@
         <p><span>Movimientos:</span> peón (1 o 2 inicial + diagonal), torre (líneas), alfil (diagonales), caballo (L), dama (líneas+diagonales), rey (1 casilla + enroque).</p>
         <p><span>Jugadas:</span> aperturas italiana, siciliana, francesa, gambito de dama, Ruy López; tácticas clavada, doble ataque, descubierta, desviación y rayos X.</p>
         <p id="room-info"><span>Sala:</span> ---</p>
-      </div>
-      <div class="leaderboard panel-glow">
-        <div class="leaderboard-header"><p class="eyebrow">TACTICAL FEED</p><h2>Historial & Ranking online</h2></div>
-        <ol id="move-history" class="move-history"></ol>
-        <ol id="ranking-list" class="move-history"></ol>
       </div>
     </section>
   </main>
