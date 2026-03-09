@@ -33,7 +33,14 @@ const boardThemeEl = document.getElementById('board-theme');
 const whiteTimerEl = document.getElementById('white-timer');
 const blackTimerEl = document.getElementById('black-timer');
 const boardWrapEl = document.querySelector('.board-wrap');
-const aiLevelSpotEl = document.getElementById('ai-level-spot');
+const tutorialBtnEl = document.getElementById('tutorial-btn');
+const openTutorialPanelBtnEl = document.getElementById('open-tutorial-panel-btn');
+const openVariationsBtnEl = document.getElementById('open-variations-btn');
+const toggleAllVariationsBtnEl = document.getElementById('toggle-all-variations-btn');
+const variationsSummaryEl = document.getElementById('variations-summary');
+const toggleAttacksBtnEl = document.getElementById('toggle-attacks-btn');
+const toggleAnimationsBtnEl = document.getElementById('toggle-animations-btn');
+const toggleAudioBtnEl = document.getElementById('toggle-audio-btn');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -45,6 +52,33 @@ const PIECE_NAMES = {
   q: 'Reina',
   k: 'Rey',
 };
+
+
+const TRAINING_VARIATIONS = [
+  'apertura italiana',
+  'apertura siciliana',
+  'apertura francesa',
+  'gambito de dama',
+  'ruy lópez',
+  'táctica clavada',
+  'táctica doble ataque',
+  'táctica descubierta',
+  'táctica desviación',
+  'táctica rayos x',
+];
+
+const TUTORIAL_ITEMS = [
+  { title: 'Apertura Italiana', text: 'Controlá el centro con e4 y piezas menores activas hacia c4/f3 para atacar f7.' },
+  { title: 'Defensa Siciliana', text: 'Respuesta dinámica con ...c5 para desequilibrar y buscar contrajuego en el flanco dama.' },
+  { title: 'Defensa Francesa', text: 'Estructura sólida con ...e6: cerrás el centro y contraatacás cadenas de peones blancas.' },
+  { title: 'Gambito de Dama', text: 'c4 ofrece peón para ganar iniciativa y líneas abiertas para alfiles y dama.' },
+  { title: 'Ruy López', text: 'Ab4 presiona el caballo de c6, debilitando la defensa del peón e5.' },
+  { title: 'Clavada', text: 'Inmovilizá una pieza porque moverla expone una pieza de mayor valor detrás.' },
+  { title: 'Doble ataque', text: 'Una pieza amenaza simultáneamente dos objetivos para ganar material o mate.' },
+  { title: 'Descubierta', text: 'Movés una pieza y liberás el ataque de otra que estaba tapada en la misma línea.' },
+  { title: 'Desviación', text: 'Forzás una pieza defensora a abandonar su casilla clave.' },
+  { title: 'Rayos X', text: 'Atacás a través de una pieza intermedia, aprovechando alineaciones en columna/diagonal.' },
+];
 
 const PIECE_SETS = {
   retro: {
@@ -79,6 +113,11 @@ let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
 let gameTimer = null;
 let isPaused = false;
+let audioEnabled = true;
+let showAttackedSquares = false;
+let enableAnimations = true;
+let highlightLastMove = null;
+let activeVariations = new Set(TRAINING_VARIATIONS);
 
 function createInitialBoard() { return [['br','bn','bb','bq','bk','bb','bn','br'],['bp','bp','bp','bp','bp','bp','bp','bp'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['wp','wp','wp','wp','wp','wp','wp','wp'],['wr','wn','wb','wq','wk','wb','wn','wr']]; }
 function createState() { return { board: createInitialBoard(), turn: 'w', moveNumber: 1, history: [], captured: { w: [], b: [] }, lastMove: null, status: 'EN CURSO' }; }
@@ -102,6 +141,7 @@ function resetGame() {
   whiteTimeLeft = 600;
   blackTimeLeft = 600;
   isPaused = false;
+  highlightLastMove = null;
   startTimerLoop();
   renderCoordinates();
   render();
@@ -121,7 +161,7 @@ function ensureAudioContext() {
 }
 
 function playTone(frequency, duration = 0.12, type = 'sine', delay = 0) {
-  if (!ensureAudioContext() || !masterGain || volume === 0) return;
+  if (!audioEnabled || !ensureAudioContext() || !masterGain || volume === 0) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   const startAt = audioCtx.currentTime + delay;
@@ -162,7 +202,7 @@ function updateVolumeUI() {
   const pct = Math.round(volume * 100);
   volumeSliderEl.value = String(pct);
   volumeSliderEl.style.setProperty('--volume-fill', `${pct}%`);
-  audioStateEl.textContent = pct === 0 ? '🔇 Sonido inactivo (0%)' : `🔊 Sonido activo (${pct}%)`;
+  audioStateEl.textContent = !audioEnabled || pct === 0 ? `🔇 Sonido inactivo (${pct}%)` : `🔊 Sonido activo (${pct}%)`;
 }
 
 function formatClock(totalSeconds) {
@@ -293,6 +333,60 @@ function applyPieceColorTheme() {
   boardEl.classList.add(`piece-color-${pieceColorTheme}`);
 }
 
+
+function collectAttackedSquares(board, color) {
+  const attacked = new Set();
+  for (let r = 0; r < 8; r += 1) {
+    for (let c = 0; c < 8; c += 1) {
+      if (board[r][c]?.[0] !== color) continue;
+      for (const m of getPseudoMoves(board, r, c)) {
+        attacked.add(`${m.row},${m.col}`);
+      }
+    }
+  }
+  return attacked;
+}
+
+function updateVariationUI() {
+  if (variationsSummaryEl) variationsSummaryEl.textContent = `${activeVariations.size}/${TRAINING_VARIATIONS.length} activas`;
+  if (toggleAllVariationsBtnEl) {
+    toggleAllVariationsBtnEl.textContent = activeVariations.size === TRAINING_VARIATIONS.length ? 'Desactivar todas' : 'Activar todas';
+  }
+  if (toggleAttacksBtnEl) toggleAttacksBtnEl.textContent = `Casillas atacadas: ${showAttackedSquares ? 'ON' : 'OFF'}`;
+  if (toggleAnimationsBtnEl) toggleAnimationsBtnEl.textContent = `Animaciones: ${enableAnimations ? 'ON' : 'OFF'}`;
+  if (toggleAudioBtnEl) toggleAudioBtnEl.textContent = `Audio: ${audioEnabled ? 'ON' : 'OFF'}`;
+}
+
+async function openTutorialModal() {
+  closeCyberModal();
+  const backdrop = document.createElement('div');
+  backdrop.className = 'cyber-modal-backdrop';
+  backdrop.innerHTML = `
+    <div class="cyber-modal panel-glow" role="dialog" aria-modal="true">
+      <h3>Tutorial de jugadas</h3>
+      <div class="tutorial-list">${TUTORIAL_ITEMS.map((item) => `<p><span>${item.title}:</span> ${item.text}</p>`).join('')}</div>
+      <div class="cyber-modal-actions">
+        <button type="button" class="btn primary" data-act="ok">Entendido</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.querySelector('[data-act="ok"]').onclick = () => closeCyberModal();
+  backdrop.addEventListener('click', (ev) => { if (ev.target === backdrop) closeCyberModal(); });
+}
+
+async function configureVariations() {
+  const current = TRAINING_VARIATIONS.map((name) => `${activeVariations.has(name) ? '✅' : '⬜'} ${name}`).join('\n');
+  const answer = await openCyberPrompt({
+    title: 'Elegir jugadas activas',
+    message: `Escribí nombres separados por coma. Vacío = mantener actual.\n\nDisponibles:\n${TRAINING_VARIATIONS.join(', ')}\n\nActual:\n${current}`,
+    defaultValue: Array.from(activeVariations).join(', '),
+  });
+  if (answer === null || !answer.trim()) return;
+  const selected = answer.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean);
+  activeVariations = new Set(TRAINING_VARIATIONS.filter((name) => selected.includes(name)));
+  updateVariationUI();
+}
+
 function render() {
   boardEl.innerHTML = '';
   applyBoardTheme();
@@ -300,6 +394,9 @@ function render() {
   const pieceSet = PIECE_SETS[pieceTheme] || PIECE_SETS.humano;
   const rows = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
   const cols = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
+  const whiteAttacked = showAttackedSquares ? collectAttackedSquares(state.board, 'w') : new Set();
+  const blackAttacked = showAttackedSquares ? collectAttackedSquares(state.board, 'b') : new Set();
+  const kingInCheck = state.status === 'JAQUE' || state.status.includes('JAQUE MATE') ? locateKing(state.board, state.turn) : null;
 
   for (const row of rows) for (const col of cols) {
     const sq = document.createElement('button');
@@ -307,6 +404,12 @@ function render() {
     if (selected?.row === row && selected?.col === col) sq.classList.add('selected');
     const m = legalMoves.find((x) => x.row === row && x.col === col);
     if (m) sq.classList.add(m.capture ? 'capture' : 'legal');
+    if (highlightLastMove && (highlightLastMove.from.row === row && highlightLastMove.from.col === col || highlightLastMove.to.row === row && highlightLastMove.to.col === col)) sq.classList.add('last-move');
+    if (showAttackedSquares) {
+      if (whiteAttacked.has(`${row},${col}`)) sq.classList.add('attacked-by-white');
+      if (blackAttacked.has(`${row},${col}`)) sq.classList.add('attacked-by-black');
+    }
+    if (kingInCheck && kingInCheck.r === row && kingInCheck.c === col) sq.classList.add('in-check');
     const p = state.board[row][col];
     if (p) {
       const sp = document.createElement('span');
@@ -315,6 +418,7 @@ function render() {
       sq.dataset.pieceName = `${pieceLabel} · ${sideLabel}`;
       sq.setAttribute('aria-label', `${pieceLabel} ${sideLabel} en ${algebraic(row, col)}`);
       sp.className = `piece ${p[0] === 'w' ? 'white' : 'black'} theme-${pieceTheme}`;
+      if (enableAnimations) sp.classList.add('animated-piece');
       sp.textContent = getPieceSymbol(pieceSet, p[1], p[0]);
       sq.appendChild(sp);
     }
@@ -333,10 +437,7 @@ function render() {
   modeLabelEl.textContent = mode === 'ai' ? `Jugador vs IA · Nivel ${aiLevel}` : mode === 'online' ? `Online (${roomCode || 'sin sala'})` : 'Local 1v1';
   renderClocks();
   if (aiLevelEl) aiLevelEl.style.display = mode === 'ai' ? 'block' : 'none';
-  if (aiLevelSpotEl) {
-    const txt = aiLevelEl?.options?.[aiLevelEl.selectedIndex]?.textContent || `IA Nivel ${aiLevel}`;
-    aiLevelSpotEl.textContent = txt.replace('IA Nivel ', 'IA Nivel ');
-  }
+  updateVariationUI();
   if (pauseGameBtn) pauseGameBtn.textContent = isPaused ? 'Reanudar' : 'Pausar';
   if (isPaused) statusTextEl.textContent = 'PAUSADA';
 }
@@ -493,6 +594,7 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
   const pieceName = PIECE_NAMES[piece[1]] || 'Ficha';
   state.history.unshift(`${sideText}: ${pieceName} ${state.moveNumber}. ${algebraic(fr, fc)} → ${algebraic(tr, tc)}`);
   state.lastMove = `${algebraic(fr, fc)} → ${algebraic(tr, tc)}`;
+  highlightLastMove = { from: { row: fr, col: fc }, to: { row: tr, col: tc } };
   state.turn = state.turn === 'w' ? 'b' : 'w';
   state.moveNumber += 1;
   selected = null;
@@ -627,11 +729,37 @@ if (pauseGameBtn) {
 flipBoardBtn.onclick = () => { flipped = !flipped; renderCoordinates(); render(); };
 resetViewBtn.onclick = () => { selected = null; legalMoves = []; render(); };
 
+
+if (tutorialBtnEl) tutorialBtnEl.onclick = () => openTutorialModal();
+if (openTutorialPanelBtnEl) openTutorialPanelBtnEl.onclick = () => openTutorialModal();
+if (openVariationsBtnEl) openVariationsBtnEl.onclick = () => configureVariations();
+if (toggleAllVariationsBtnEl) {
+  toggleAllVariationsBtnEl.onclick = () => {
+    activeVariations = activeVariations.size === TRAINING_VARIATIONS.length ? new Set() : new Set(TRAINING_VARIATIONS);
+    updateVariationUI();
+  };
+}
+if (toggleAttacksBtnEl) toggleAttacksBtnEl.onclick = () => { showAttackedSquares = !showAttackedSquares; render(); };
+if (toggleAnimationsBtnEl) toggleAnimationsBtnEl.onclick = () => { enableAnimations = !enableAnimations; render(); };
+if (toggleAudioBtnEl) {
+  toggleAudioBtnEl.onclick = () => {
+    audioEnabled = !audioEnabled;
+    if (!audioEnabled) volume = 0;
+    else if (volume === 0) volume = 1;
+    if (masterGain) masterGain.gain.value = volume;
+    updateVolumeUI();
+    updateVariationUI();
+  };
+}
+
+
 if (volumeSliderEl) {
   volumeSliderEl.oninput = () => {
     volume = Number(volumeSliderEl.value) / 100;
+    audioEnabled = volume > 0;
     if (masterGain) masterGain.gain.value = volume;
     updateVolumeUI();
+    updateVariationUI();
     ensureAudioContext();
   };
   volumeSliderEl.addEventListener('pointerdown', ensureAudioContext);
@@ -653,5 +781,11 @@ if (commandFromEl && commandToEl) {
 }
 
 updateVolumeUI();
+updateVariationUI();
 resetGame();
 loadRanking();
+
+
+['click', 'touchstart', 'keydown', 'pointerdown'].forEach((evt) => {
+  document.addEventListener(evt, ensureAudioContext, { once: true });
+});

@@ -66,6 +66,7 @@
               <div class="leaderboard-header"><p class="eyebrow">HISTORIAL</p><h2>Movimientos</h2></div>
               <ol id="move-history" class="move-history"></ol>
               <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
+              <button id="tutorial-btn" class="btn secondary" type="button">Tutorial de jugadas</button>
             </div>
           </aside>
         </div>
@@ -108,7 +109,7 @@
     <section class="aux-panels">
       <div class="controls panel-glow">
         <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Online</option></select>
-        <div class="ai-level-spot panel-inline" id="ai-level-spot">IA Nivel 3 · Élite</div>
+        <button id="open-tutorial-panel-btn" class="btn secondary" type="button">Tutorial</button>
         <button id="new-game-btn" class="btn primary" type="button">Nueva partida</button>
         <button id="pause-game-btn" class="btn secondary" type="button">Pausar</button>
         <button id="restart-game-btn" class="btn danger" type="button">Reiniciar partida</button>
@@ -124,6 +125,14 @@
         <p><span>Reglas:</span> jaque, jaque mate, tablas, enroque corto/largo, captura al paso, promoción y ahogado.</p>
         <p><span>Movimientos:</span> peón (1 o 2 inicial + diagonal), torre (líneas), alfil (diagonales), caballo (L), dama (líneas + diagonales), rey (1 casilla + enroque).</p>
         <p><span>Jugadas:</span> aperturas italiana, siciliana, francesa, gambito de dama, Ruy López; tácticas clavada, doble ataque, descubierta, desviación y rayos X.</p>
+        <div class="variation-controls panel-inline">
+          <p><span>Repertorio:</span> <strong id="variations-summary">10/10 activas</strong></p>
+          <button id="open-variations-btn" class="btn secondary" type="button">Elegir jugadas activas</button>
+          <button id="toggle-all-variations-btn" class="btn secondary" type="button">Desactivar todas</button>
+          <button id="toggle-attacks-btn" class="btn secondary" type="button">Casillas atacadas: OFF</button>
+          <button id="toggle-animations-btn" class="btn secondary" type="button">Animaciones: ON</button>
+          <button id="toggle-audio-btn" class="btn secondary" type="button">Audio: ON</button>
+        </div>
         <p id="room-info"><span>Sala:</span> ---</p>
       </div>
     </section>

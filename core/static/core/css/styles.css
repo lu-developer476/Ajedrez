@@ -217,7 +217,7 @@ body {
   opacity: 0.34;
 }
 
-.board-main-row { display: flex; align-items: stretch; gap: 10px; }
+.board-main-row { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
 
 .side-stack {
   min-width: 220px;
@@ -324,19 +324,19 @@ body {
 .square.legal::after {
   content: '';
   position: absolute;
-  width: 22%;
-  height: 22%;
+  width: 24%;
+  height: 24%;
   border-radius: 50%;
-  background: rgba(255, 200, 87, 0.84);
-  box-shadow: 0 0 16px rgba(255, 200, 87, 0.55);
+  background: rgba(84, 227, 130, 0.86);
+  box-shadow: 0 0 16px rgba(84, 227, 130, 0.6);
 }
 
 .square.capture::after {
   width: 72%;
   height: 72%;
   background: transparent;
-  border: 4px solid rgba(255, 95, 133, 0.78);
-  box-shadow: inset 0 0 12px rgba(255, 95, 133, 0.25), 0 0 18px rgba(255, 95, 133, 0.35);
+  border: 4px solid rgba(255, 72, 72, 0.88);
+  box-shadow: inset 0 0 12px rgba(255, 72, 72, 0.3), 0 0 18px rgba(255, 72, 72, 0.4);
 }
 
 
@@ -429,6 +429,37 @@ body {
   box-shadow: inset 0 0 0 5px rgba(255, 95, 133, 0.9), 0 0 24px rgba(255, 95, 133, 0.36);
 }
 
+
+.square.last-move {
+  box-shadow: inset 0 0 0 4px rgba(255, 208, 120, 0.85), 0 0 18px rgba(255, 208, 120, 0.34);
+}
+
+.square.attacked-by-white::before,
+.square.attacked-by-black::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.square.attacked-by-white::before {
+  border: 2px dashed rgba(122, 245, 255, 0.55);
+}
+
+.square.attacked-by-black::before {
+  border: 2px dashed rgba(255, 114, 189, 0.55);
+}
+
+.animated-piece {
+  animation: piece-slide-in 0.22s ease;
+}
+
+@keyframes piece-slide-in {
+  from { transform: translateY(-5px) scale(0.95); opacity: 0.2; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
 .piece {
   position: relative;
   z-index: 1;
@@ -464,14 +495,15 @@ body {
 
 .piece.theme-retro { font-family: "Times New Roman", serif; opacity: 0.94; }
 .piece.theme-humano {
-  font-family: "Cinzel", "Times New Roman", serif;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "Cinzel", "Times New Roman", serif;
   font-weight: 700;
   text-shadow: 0 2px 2px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.28);
 }
 .piece.theme-cyborg {
-  font-family: "Cinzel", "Times New Roman", serif;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "Cinzel", "Times New Roman", serif;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
+  font-size: clamp(1.7rem, 4.5vw, 2.5rem);
   transform: scale(1.02);
   filter: drop-shadow(0 0 10px rgba(121, 246, 255, 0.4));
 }
@@ -612,6 +644,10 @@ body {
 
 .cyber-modal p { margin: 0 0 12px; text-align: center; color: var(--muted); }
 
+.tutorial-list { max-height: 45vh; overflow: auto; padding-right: 4px; }
+.tutorial-list p { text-align: left; margin-bottom: 10px; }
+.tutorial-list span { color: var(--accent-3); font-weight: 700; }
+
 .cyber-modal-input {
   width: 100%;
   margin-bottom: 12px;
@@ -627,6 +663,25 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+
+.variation-controls {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.variation-controls p {
+  margin: 0;
+  text-align: center;
+}
+
+.variation-controls .btn {
+  width: 100%;
+  padding: 10px 12px;
 }
 
 .tips p { margin: 0 0 12px; color: var(--muted); }
@@ -814,6 +869,12 @@ body {
 .footer-separator { color: rgba(255,255,255,0.25); }
 
 @media (max-width: 1120px) {
+  .footer {
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    margin: 0 auto;
+  }
   .game-shell {
     grid-template-columns: 1fr;
     grid-template-areas: "left" "main" "bottom";
@@ -830,6 +891,12 @@ body {
 
 @media (max-width: 720px) {
   :root { --cell-size: min(10.7vw, 48px); }
+  .footer {
+    justify-content: center;
+    text-align: center;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
   .game-shell { width: min(100%, calc(100% - 18px)); margin-top: 12px; }
   .arena, .controls, .audio-panel, .tips, .leaderboard, .brand-box, .stat-card { border-radius: 20px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
