@@ -317,6 +317,22 @@ body {
   box-shadow: inset 0 0 12px rgba(255, 95, 133, 0.25), 0 0 18px rgba(255, 95, 133, 0.35);
 }
 
+
+.board.board-theme-classic .square.light { background: radial-gradient(circle at 30% 25%, #ffe7da, var(--light-cell)); }
+.board.board-theme-classic .square.dark { background: radial-gradient(circle at 30% 25%, #be643e, var(--dark-cell)); }
+
+.board.board-theme-obsidian .square.light { background: radial-gradient(circle at 28% 25%, #d5d7e5, #8f97b4); }
+.board.board-theme-obsidian .square.dark { background: radial-gradient(circle at 30% 25%, #495170, #22293f); }
+
+.board.board-theme-neon-grid .square.light { background: linear-gradient(145deg, #ddfff8, #8effe5); }
+.board.board-theme-neon-grid .square.dark { background: linear-gradient(145deg, #0f5f6a, #1f313a); }
+
+.board.board-theme-chrome .square.light { background: linear-gradient(145deg, #f8f8f8, #b8c1ca); }
+.board.board-theme-chrome .square.dark { background: linear-gradient(145deg, #768493, #354150); }
+
+.board.board-theme-synthwave .square.light { background: radial-gradient(circle at 35% 25%, #ffe0ff, #ff9ad8); }
+.board.board-theme-synthwave .square.dark { background: radial-gradient(circle at 30% 25%, #8a4dff, #35195c); }
+
 .square.in-check {
   box-shadow: inset 0 0 0 5px rgba(255, 95, 133, 0.9), 0 0 24px rgba(255, 95, 133, 0.36);
 }
@@ -342,6 +358,14 @@ body {
   color: #1c0f1e;
   text-shadow: 0 0 8px rgba(255, 123, 206, 0.5), 0 0 18px rgba(255, 148, 77, 0.28);
 }
+
+
+.piece.theme-medieval { font-family: "Times New Roman", serif; }
+.piece.theme-cibernetico { font-family: 'Orbitron', sans-serif; }
+.piece.theme-robotico { letter-spacing: 0.04em; }
+.piece.theme-androide { text-shadow: 0 0 10px rgba(94, 255, 205, 0.55), 0 0 18px rgba(132, 190, 255, 0.3); }
+.piece.theme-techno { text-shadow: 0 0 10px rgba(255, 241, 120, 0.5), 0 0 18px rgba(121, 246, 255, 0.33); }
+.piece.theme-merc { text-shadow: 0 0 10px rgba(255, 101, 188, 0.62), 0 0 24px rgba(255, 148, 77, 0.35); }
 
 .board-info {
   display: grid;
@@ -396,7 +420,9 @@ body {
 .btn.danger { background: linear-gradient(135deg, #ff7e5f, #ff4e7a); color: #fff3f3; }
 
 #mode-select,
-#ai-level {
+#ai-level,
+#piece-theme,
+#board-theme {
   grid-column: 1 / -1;
   text-align: center;
   text-align-last: center;
@@ -627,7 +653,15 @@ body {
 
   .hud { max-width: 760px; margin: 0 auto; width: 100%; }
   .aux-panels { grid-template-columns: 1fr; }
-  .board-info { grid-template-columns: 1fr; }
+  
+.piece.theme-medieval { font-family: "Times New Roman", serif; }
+.piece.theme-cibernetico { font-family: 'Orbitron', sans-serif; }
+.piece.theme-robotico { letter-spacing: 0.04em; }
+.piece.theme-androide { text-shadow: 0 0 10px rgba(94, 255, 205, 0.55), 0 0 18px rgba(132, 190, 255, 0.3); }
+.piece.theme-techno { text-shadow: 0 0 10px rgba(255, 241, 120, 0.5), 0 0 18px rgba(121, 246, 255, 0.33); }
+.piece.theme-merc { text-shadow: 0 0 10px rgba(255, 101, 188, 0.62), 0 0 24px rgba(255, 148, 77, 0.35); }
+
+.board-info { grid-template-columns: 1fr; }
   .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #mode-select { grid-column: 1 / -1; }
 }
