@@ -8,7 +8,7 @@
   <title>Ajedrez</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Orbitron:wght@500;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'core/css/styles.css' %}">
   <link rel="icon" type="image/png" href="{% static 'core/favicon.png' %}">
 </head>
@@ -63,9 +63,8 @@
               <small>Enter ejecuta el movimiento</small>
             </div>
             <div class="leaderboard panel-inline leaderboard-compact">
-              <div class="leaderboard-header"><p class="eyebrow">TACTICAL FEED</p><h2>Historial & Ranking online</h2></div>
+              <div class="leaderboard-header"><p class="eyebrow">TACTICAL FEED</p><h2>Historial de movimientos</h2></div>
               <ol id="move-history" class="move-history"></ol>
-              <ol id="ranking-list" class="move-history"></ol>
             </div>
           </aside>
         </div>
@@ -86,12 +85,18 @@
         </select>
         <select id="piece-theme" class="btn secondary" aria-label="Estilo de fichas">
           <option value="retro">Fichas · Retro</option>
-          <option value="medieval" selected>Fichas · Medieval (default)</option>
+          <option value="medieval" selected>Fichas · Medieval videojuego (default)</option>
           <option value="cibernetico">Fichas · Cibernético</option>
           <option value="robotico">Fichas · Robótico (metal)</option>
           <option value="androide">Fichas · Androide (sintético)</option>
           <option value="techno">Fichas · Techno</option>
           <option value="merc">Fichas · Merc (híbrido cyberpunk)</option>
+        </select>
+        <select id="piece-colors" class="btn secondary" aria-label="Paleta de color de fichas">
+          <option value="original" selected>Colores · Original (marfil y ébano)</option>
+          <option value="moderno">Colores · Moderno (beige y marrón rojizo)</option>
+          <option value="staunton">Colores · Staunton (madera clara y marrón oscuro)</option>
+          <option value="digital">Colores · Digital (dorado y plata)</option>
         </select>
         <select id="board-theme" class="btn secondary" aria-label="Estilo de tablero">
           <option value="classic" selected>Tablero · Clásico Neon (default)</option>
@@ -111,6 +116,10 @@
         <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
         <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
         <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
+      </div>
+      <div class="leaderboard panel-glow">
+        <div class="leaderboard-header"><p class="eyebrow">ONLINE</p><h2>Ranking online</h2></div>
+        <ol id="ranking-list" class="move-history"></ol>
       </div>
       <div class="tips panel-glow">
         <p><span>Reglas:</span> jaque, jaque mate, tablas, enroque corto/largo, captura al paso, promoción y ahogado.</p>

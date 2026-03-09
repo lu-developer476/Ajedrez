@@ -26,6 +26,7 @@ const commandFromEl = document.getElementById('command-from');
 const commandToEl = document.getElementById('command-to');
 const aiLevelEl = document.getElementById('ai-level');
 const pieceThemeEl = document.getElementById('piece-theme');
+const pieceColorsEl = document.getElementById('piece-colors');
 const boardThemeEl = document.getElementById('board-theme');
 const whiteTimerEl = document.getElementById('white-timer');
 const blackTimerEl = document.getElementById('black-timer');
@@ -34,7 +35,10 @@ const boardWrapEl = document.querySelector('.board-wrap');
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const PIECE_SETS = {
   retro: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
-  medieval: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  medieval: {
+    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
+    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  },
   cibernetico: { p: '⟡', r: '⛨', n: '⚙', b: '⌬', q: '✶', k: '⛭' },
   robotico: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
   androide: { p: '◍', r: '⛶', n: '⬢', b: '◇', q: '✹', k: '⛯' },
@@ -54,6 +58,7 @@ let masterGain = null;
 let volume = 1;
 let aiLevel = 3;
 let pieceTheme = 'medieval';
+let pieceColorTheme = 'original';
 let boardTheme = 'classic';
 let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
@@ -261,9 +266,20 @@ function applyBoardTheme() {
   boardWrapEl.classList.add(`board-shell-theme-${boardTheme}`);
 }
 
+function getPieceSymbol(pieceSet, piece, side) {
+  if (pieceSet?.white && pieceSet?.black) return (side === 'w' ? pieceSet.white[piece] : pieceSet.black[piece]) || '·';
+  return pieceSet?.[piece] || '·';
+}
+
+function applyPieceColorTheme() {
+  boardEl.classList.remove('piece-color-original', 'piece-color-moderno', 'piece-color-staunton', 'piece-color-digital');
+  boardEl.classList.add(`piece-color-${pieceColorTheme}`);
+}
+
 function render() {
   boardEl.innerHTML = '';
   applyBoardTheme();
+  applyPieceColorTheme();
   const pieceSet = PIECE_SETS[pieceTheme] || PIECE_SETS.medieval;
   const rows = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
   const cols = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
@@ -278,7 +294,7 @@ function render() {
     if (p) {
       const sp = document.createElement('span');
       sp.className = `piece ${p[0] === 'w' ? 'white' : 'black'} theme-${pieceTheme}`;
-      sp.textContent = pieceSet[p[1]] || '·';
+      sp.textContent = getPieceSymbol(pieceSet, p[1], p[0]);
       sq.appendChild(sp);
     }
     sq.onclick = () => clickSquare(row, col);
@@ -436,6 +452,7 @@ async function playAi() {
 }
 
 async function loadRanking() {
+  if (!rankingListEl) return;
   const res = await fetch('/api/ranking/');
   const data = await res.json();
   rankingListEl.innerHTML = (data.results || []).map((p) => `<li>${p.name}: ${p.rating} (${p.wins}W/${p.losses}L/${p.draws}D)</li>`).join('') || '<li>Sin ranking todavía.</li>';
@@ -482,6 +499,7 @@ modeSelectEl.onchange = () => {
 };
 if (aiLevelEl) aiLevelEl.onchange = () => { aiLevel = Number(aiLevelEl.value) || 3; render(); };
 if (pieceThemeEl) pieceThemeEl.onchange = () => { pieceTheme = pieceThemeEl.value || 'medieval'; render(); };
+if (pieceColorsEl) pieceColorsEl.onchange = () => { pieceColorTheme = pieceColorsEl.value || 'original'; render(); };
 if (boardThemeEl) boardThemeEl.onchange = () => { boardTheme = boardThemeEl.value || 'classic'; render(); };
 
 onlineCreateBtn.onclick = async () => {
