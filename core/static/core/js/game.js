@@ -50,6 +50,7 @@ const PIECE_SETS = {
   retro: {
     white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
     black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  },
   humano: {
     white: { p: '♟️', r: '🗼', n: '🐎', b: '👤', q: '👸', k: '🤴' },
     black: { p: '♟️', r: '🗼', n: '🐎', b: '👤', q: '👸', k: '🤴' },
