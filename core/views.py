@@ -172,38 +172,149 @@ def _legal_moves(board, row, col):
 def _piece_value(piece):
     if not piece:
         return 0
-    return {'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 0}.get(piece[1], 0)
+    return {'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000}.get(piece[1], 0)
 
 
-def _score_move(board, move):
+def _piece_square_bonus(piece, row, col):
+    if not piece:
+        return 0
+    kind = piece[1]
+    color = piece[0]
+    oriented_row = row if color == 'w' else 7 - row
+
+    center_weight = max(0, 3 - abs(3.5 - row)) + max(0, 3 - abs(3.5 - col))
+    if kind == 'p':
+        return int((6 - oriented_row) * 8 + center_weight * 2)
+    if kind == 'n':
+        return int(center_weight * 8)
+    if kind == 'b':
+        return int(center_weight * 6)
+    if kind == 'r':
+        return int((7 - oriented_row) * 2 + center_weight * 2)
+    if kind == 'q':
+        return int(center_weight * 3)
+    if kind == 'k':
+        return int(-center_weight * 4 if oriented_row > 1 else center_weight * 2)
+    return 0
+
+
+def _evaluate_board(board, color):
+    score = 0
+    enemy = 'b' if color == 'w' else 'w'
+    mobility_self = len(_all_legal_moves(board, color))
+    mobility_enemy = len(_all_legal_moves(board, enemy))
+
+    for r in range(8):
+        for c in range(8):
+            piece = board[r][c]
+            if not piece:
+                continue
+            value = _piece_value(piece) + _piece_square_bonus(piece, r, c)
+            score += value if piece[0] == color else -value
+
+    score += (mobility_self - mobility_enemy) * 6
+    if _in_check(board, enemy):
+        score += 40
+    if _in_check(board, color):
+        score -= 40
+    return score
+
+
+def _apply_move(board, move):
+    nb = deepcopy(board)
     fr = move['from']
     to = move['to']
-    target = board[to['row']][to['col']]
-    score = _piece_value(target) * 10
-    center_bonus = 3 - abs(3.5 - to['row']) + 3 - abs(3.5 - to['col'])
-    return score + center_bonus
+    nb[to['row']][to['col']] = nb[fr['row']][fr['col']]
+    nb[fr['row']][fr['col']] = None
+    _apply_promotion(nb, to['row'], to['col'])
+    return nb
+
+
+def _ordered_moves(board, color):
+    legal = _all_legal_moves(board, color)
+    enemy = 'b' if color == 'w' else 'w'
+
+    def move_score(mv):
+        fr = mv['from']
+        to = mv['to']
+        moving_piece = board[fr['row']][fr['col']]
+        target = board[to['row']][to['col']]
+        score = 0
+        if target:
+            score += _piece_value(target) - (_piece_value(moving_piece) // 12)
+        if abs(to['row'] - fr['row']) == 2 and moving_piece and moving_piece[1] == 'p':
+            score += 12
+        nb = _apply_move(board, mv)
+        if _in_check(nb, enemy):
+            score += 35
+        return score
+
+    return sorted(legal, key=move_score, reverse=True)
+
+
+def _minimax(board, root_color, to_move, depth, alpha, beta):
+    legal = _ordered_moves(board, to_move)
+    enemy = 'b' if to_move == 'w' else 'w'
+
+    if depth == 0 or not legal:
+        if not legal:
+            if _in_check(board, to_move):
+                return (-10**9 if to_move == root_color else 10**9), None
+            return 0, None
+        return _evaluate_board(board, root_color), None
+
+    maximizing = to_move == root_color
+    best_move = None
+
+    if maximizing:
+        best_score = -10**12
+        for mv in legal:
+            nb = _apply_move(board, mv)
+            score, _ = _minimax(nb, root_color, enemy, depth - 1, alpha, beta)
+            if score > best_score:
+                best_score, best_move = score, mv
+            alpha = max(alpha, best_score)
+            if beta <= alpha:
+                break
+        return best_score, best_move
+
+    best_score = 10**12
+    for mv in legal:
+        nb = _apply_move(board, mv)
+        score, _ = _minimax(nb, root_color, enemy, depth - 1, alpha, beta)
+        if score < best_score:
+            best_score, best_move = score, mv
+        beta = min(beta, best_score)
+        if beta <= alpha:
+            break
+    return best_score, best_move
 
 
 def _pick_move_for_difficulty(board, color, difficulty):
-    legal = _all_legal_moves(board, color)
+    level = max(1, min(5, int(difficulty or 3)))
+    depth_by_level = {1: 1, 2: 2, 3: 2, 4: 3, 5: 3}
+    legal = _ordered_moves(board, color)
     if not legal:
         return None
-    level = max(1, min(5, int(difficulty or 3)))
+
     if level == 1:
-        return random.choice(legal)
+        pool = legal[: max(2, min(8, len(legal)))]
+        return random.choice(pool)
 
-    scored = sorted(legal, key=lambda mv: _score_move(board, mv), reverse=True)
     if level == 2:
-        top_pool = scored[: max(2, len(scored) // 2)]
-        return random.choice(top_pool)
-    if level == 3:
-        top_pool = scored[: max(1, len(scored) // 3)]
-        return random.choice(top_pool)
-    if level == 4:
-        return scored[0]
+        top_count = max(2, len(legal) // 2)
+        pool = legal[:top_count]
+        _, candidate = _minimax(board, color, color, depth_by_level[level], -10**12, 10**12)
+        return candidate if candidate in pool and random.random() > 0.2 else random.choice(pool)
 
-    tactical = [mv for mv in scored if board[mv['to']['row']][mv['to']['col']]]
-    return tactical[0] if tactical else scored[0]
+    _, best_move = _minimax(board, color, color, depth_by_level[level], -10**12, 10**12)
+    if not best_move:
+        return legal[0]
+
+    if level == 3 and len(legal) > 2 and random.random() < 0.1:
+        return random.choice(legal[:3])
+
+    return best_move
 
 
 def _all_legal_moves(board, color):
