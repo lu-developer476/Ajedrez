@@ -191,6 +191,57 @@ function startTimerLoop() {
   renderClocks();
 }
 
+
+function formatClock(totalSeconds) {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function renderClocks() {
+  if (whiteTimerEl) whiteTimerEl.textContent = formatClock(Math.max(0, whiteTimeLeft));
+  if (blackTimerEl) blackTimerEl.textContent = formatClock(Math.max(0, blackTimeLeft));
+}
+
+function stopTimerLoop() {
+  if (gameTimer) {
+    clearInterval(gameTimer);
+    gameTimer = null;
+  }
+}
+
+function evaluateGameStatus() {
+  const check = isKingInCheck(state.board, state.turn);
+  const active = hasAny(state.board, state.turn);
+  state.status = check && !active ? `JAQUE MATE · ${state.turn === 'w' ? 'NEGRAS' : 'BLANCAS'} GANAN` : check ? 'JAQUE' : !active ? 'TABLAS' : 'EN CURSO';
+  if (check && state.turn === 'w' && !active) state.status = 'JAQUE MATE · NEGRAS GANAN';
+  return { check, active };
+}
+
+function tickGameClock() {
+  if (!state || state.status !== 'EN CURSO' && state.status !== 'JAQUE') return;
+  if (state.turn === 'w') whiteTimeLeft -= 1;
+  else blackTimeLeft -= 1;
+
+  if (whiteTimeLeft <= 0) {
+    whiteTimeLeft = 0;
+    state.status = 'TIEMPO AGOTADO · NEGRAS GANAN';
+    stopTimerLoop();
+  }
+  if (blackTimeLeft <= 0) {
+    blackTimeLeft = 0;
+    state.status = 'TIEMPO AGOTADO · BLANCAS GANAN';
+    stopTimerLoop();
+  }
+  render();
+}
+
+function startTimerLoop() {
+  stopTimerLoop();
+  gameTimer = setInterval(tickGameClock, 1000);
+  renderClocks();
+}
+
 function renderCoordinates() {
   const files = flipped ? [...FILES].reverse() : FILES;
   const ranks = flipped ? ['1','2','3','4','5','6','7','8'] : ['8','7','6','5','4','3','2','1'];
