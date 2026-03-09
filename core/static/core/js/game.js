@@ -24,9 +24,12 @@ const volumeSliderEl = document.getElementById('volume-slider');
 const audioStateEl = document.getElementById('audio-state');
 const commandFromEl = document.getElementById('command-from');
 const commandToEl = document.getElementById('command-to');
+const aiLevelEl = document.getElementById('ai-level');
+const whiteTimerEl = document.getElementById('white-timer');
+const blackTimerEl = document.getElementById('black-timer');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-const PIECES = { wp: '♙', wr: '♖', wn: '♘', wb: '♗', wq: '♕', wk: '♔', bp: '♟', br: '♜', bn: '♞', bb: '♝', bq: '♛', bk: '♚' };
+const PIECES = { wp: '⟡', wr: '⛨', wn: '⚙', wb: '⌬', wq: '✶', wk: '⛭', bp: '◆', br: '⛩', bn: '⚙', bb: '⬢', bq: '✹', bk: '☬' };
 
 let state = null;
 let selected = null;
@@ -38,6 +41,10 @@ let pollTimer = null;
 let audioCtx = null;
 let masterGain = null;
 let volume = 1;
+let aiLevel = 3;
+let whiteTimeLeft = 600;
+let blackTimeLeft = 600;
+let gameTimer = null;
 
 function createInitialBoard() { return [['br','bn','bb','bq','bk','bb','bn','br'],['bp','bp','bp','bp','bp','bp','bp','bp'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['wp','wp','wp','wp','wp','wp','wp','wp'],['wr','wn','wb','wq','wk','wb','wn','wr']]; }
 function createState() { return { board: createInitialBoard(), turn: 'w', moveNumber: 1, history: [], captured: { w: [], b: [] }, lastMove: null, status: 'EN CURSO' }; }
@@ -54,7 +61,16 @@ function parseSquare(input) {
   return { row: 8 - rank, col: file };
 }
 
-function resetGame() { state = createState(); selected = null; legalMoves = []; renderCoordinates(); render(); }
+function resetGame() {
+  state = createState();
+  selected = null;
+  legalMoves = [];
+  whiteTimeLeft = 600;
+  blackTimeLeft = 600;
+  startTimerLoop();
+  renderCoordinates();
+  render();
+}
 
 
 function ensureAudioContext() {
@@ -116,6 +132,57 @@ function updateVolumeUI() {
 }
 
 
+
+function formatClock(totalSeconds) {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function renderClocks() {
+  if (whiteTimerEl) whiteTimerEl.textContent = formatClock(Math.max(0, whiteTimeLeft));
+  if (blackTimerEl) blackTimerEl.textContent = formatClock(Math.max(0, blackTimeLeft));
+}
+
+function stopTimerLoop() {
+  if (gameTimer) {
+    clearInterval(gameTimer);
+    gameTimer = null;
+  }
+}
+
+function evaluateGameStatus() {
+  const check = isKingInCheck(state.board, state.turn);
+  const active = hasAny(state.board, state.turn);
+  state.status = check && !active ? `JAQUE MATE · ${state.turn === 'w' ? 'NEGRAS' : 'BLANCAS'} GANAN` : check ? 'JAQUE' : !active ? 'TABLAS' : 'EN CURSO';
+  if (check && state.turn === 'w' && !active) state.status = 'JAQUE MATE · NEGRAS GANAN';
+  return { check, active };
+}
+
+function tickGameClock() {
+  if (!state || state.status !== 'EN CURSO' && state.status !== 'JAQUE') return;
+  if (state.turn === 'w') whiteTimeLeft -= 1;
+  else blackTimeLeft -= 1;
+
+  if (whiteTimeLeft <= 0) {
+    whiteTimeLeft = 0;
+    state.status = 'TIEMPO AGOTADO · NEGRAS GANAN';
+    stopTimerLoop();
+  }
+  if (blackTimeLeft <= 0) {
+    blackTimeLeft = 0;
+    state.status = 'TIEMPO AGOTADO · BLANCAS GANAN';
+    stopTimerLoop();
+  }
+  render();
+}
+
+function startTimerLoop() {
+  stopTimerLoop();
+  gameTimer = setInterval(tickGameClock, 1000);
+  renderClocks();
+}
+
 function renderCoordinates() {
   const files = flipped ? [...FILES].reverse() : FILES;
   const ranks = flipped ? ['1','2','3','4','5','6','7','8'] : ['8','7','6','5','4','3','2','1'];
@@ -137,8 +204,10 @@ function render() {
   turnIndicatorEl.textContent = state.turn === 'w' ? 'Blancas' : 'Negras'; statusTextEl.textContent = state.status;
   moveCounterEl.textContent = state.moveNumber; selectionLabelEl.textContent = selected ? algebraic(selected.row, selected.col) : '---';
   whiteCapturesEl.textContent = state.captured.w.length; blackCapturesEl.textContent = state.captured.b.length; lastMoveEl.textContent = state.lastMove || '---';
-  moveHistoryEl.innerHTML = state.history.length ? state.history.map((m) => `<li>${m}</li>`).join('') : '<li>Sin movimientos aún.</li>';
-  modeLabelEl.textContent = mode === 'ai' ? 'Jugador vs IA' : mode === 'online' ? `Online (${roomCode || 'sin sala'})` : 'Local 1v1';
+  moveHistoryEl.innerHTML = state.history.length ? state.history.map((m, i) => `<li><span class="move-badge">#${state.history.length - i}</span>${m}</li>`).join('') : '<li>Sin movimientos aún.</li>';
+  modeLabelEl.textContent = mode === 'ai' ? `Jugador vs IA · Nivel ${aiLevel}` : mode === 'online' ? `Online (${roomCode || 'sin sala'})` : 'Local 1v1';
+  renderClocks();
+  if (aiLevelEl) aiLevelEl.style.display = mode === 'ai' ? 'block' : 'none';
 }
 
 function pushIfValid(board, moves, row, col, tr, tc) { if (!inBounds(tr, tc)) return; const p = board[row][col]; const t = board[tr][tc]; if (!t) moves.push({ row: tr, col: tc, capture: false }); else if (t[0] !== p[0]) moves.push({ row: tr, col: tc, capture: true }); }
@@ -229,7 +298,8 @@ function openCyberConfirm(message) {
 }
 
 function clickSquare(row, col) {
-  if (state.status.includes('JAQUE MATE')) return;
+  evaluateGameStatus();
+  if (state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
   const piece = state.board[row][col];
   if (selected) {
     const chosen = legalMoves.find((m) => m.row === row && m.col === col);
@@ -247,16 +317,15 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = 'q') {
   if (target) state.captured[piece[0]].push(target);
   state.history.unshift(`${state.moveNumber}. ${algebraic(fr, fc)} → ${algebraic(tr, tc)}`); state.lastMove = `${algebraic(fr, fc)} → ${algebraic(tr, tc)}`;
   state.turn = state.turn === 'w' ? 'b' : 'w'; state.moveNumber += 1; selected = null; legalMoves = [];
-  const check = isKingInCheck(state.board, state.turn), active = hasAny(state.board, state.turn);
-  state.status = check && !active ? `JAQUE MATE · ${state.turn === 'w' ? 'NEGRAS' : 'BLANCAS'} GANAN` : check ? 'JAQUE' : !active ? 'TABLAS' : 'EN CURSO';
+  evaluateGameStatus();
   playMoveSound(Boolean(target), state.status);
   render();
   if (mode === 'online' && roomCode) await syncOnline();
-  if (mode === 'ai' && state.turn === 'b' && state.status === 'EN CURSO') await playAi();
+  if (mode === 'ai' && state.turn === 'b' && (state.status === 'EN CURSO' || state.status === 'JAQUE')) await playAi();
 }
 
 async function playAi() {
-  const res = await fetch('/api/ai-move/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board: state.board, color: 'b' }) });
+  const res = await fetch('/api/ai-move/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board: state.board, color: 'b', difficulty: aiLevel }) });
   const data = await res.json();
   if (data.status !== 'ok') return;
   await makeMove(data.move.from.row, data.move.from.col, data.move.to.row, data.move.to.col);
@@ -286,12 +355,14 @@ async function executeCoordinateMove() {
   const moves = getLegalMoves(state.board, from.row, from.col);
   const chosen = moves.find((m) => m.row === to.row && m.col === to.col);
   if (!chosen) return;
+  if (state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
   await makeMove(from.row, from.col, to.row, to.col);
   commandFromEl.value = '';
   commandToEl.value = '';
 }
 
 modeSelectEl.onchange = () => { mode = modeSelectEl.value; render(); if (pollTimer) clearInterval(pollTimer); if (mode === 'online' && roomCode) pollTimer = setInterval(pollOnline, 2000); };
+if (aiLevelEl) aiLevelEl.onchange = () => { aiLevel = Number(aiLevelEl.value) || 3; render(); };
 onlineCreateBtn.onclick = async () => {
   const player = await openCyberPrompt({ title: 'Crear sala', message: 'Ingresá tu alias de jugador', defaultValue: 'White' });
   if (player === null) return;
@@ -347,4 +418,5 @@ if (commandFromEl && commandToEl) {
 }
 
 updateVolumeUI();
-resetGame(); loadRanking();
+resetGame();
+loadRanking();

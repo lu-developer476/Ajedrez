@@ -169,6 +169,43 @@ def _legal_moves(board, row, col):
     return result
 
 
+def _piece_value(piece):
+    if not piece:
+        return 0
+    return {'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 0}.get(piece[1], 0)
+
+
+def _score_move(board, move):
+    fr = move['from']
+    to = move['to']
+    target = board[to['row']][to['col']]
+    score = _piece_value(target) * 10
+    center_bonus = 3 - abs(3.5 - to['row']) + 3 - abs(3.5 - to['col'])
+    return score + center_bonus
+
+
+def _pick_move_for_difficulty(board, color, difficulty):
+    legal = _all_legal_moves(board, color)
+    if not legal:
+        return None
+    level = max(1, min(5, int(difficulty or 3)))
+    if level == 1:
+        return random.choice(legal)
+
+    scored = sorted(legal, key=lambda mv: _score_move(board, mv), reverse=True)
+    if level == 2:
+        top_pool = scored[: max(2, len(scored) // 2)]
+        return random.choice(top_pool)
+    if level == 3:
+        top_pool = scored[: max(1, len(scored) // 3)]
+        return random.choice(top_pool)
+    if level == 4:
+        return scored[0]
+
+    tactical = [mv for mv in scored if board[mv['to']['row']][mv['to']['col']]]
+    return tactical[0] if tactical else scored[0]
+
+
 def _all_legal_moves(board, color):
     all_moves = []
     for r in range(8):
@@ -201,14 +238,14 @@ def ai_move(request):
     data = _payload(request)
     board = data.get('board') or _initial_board()
     color = data.get('color', 'b')
+    difficulty = int(data.get('difficulty') or 3)
 
-    move = _try_stockfish_move(board, color)
+    move = _try_stockfish_move(board, color) if difficulty >= 5 else None
     engine = 'stockfish' if move else 'fallback'
     if not move:
-        legal = _all_legal_moves(board, color)
-        if not legal:
+        move = _pick_move_for_difficulty(board, color, difficulty)
+        if not move:
             return JsonResponse({'status': 'end', 'message': 'Sin jugadas legales'}, status=200)
-        move = random.choice(legal)
 
     return JsonResponse({'status': 'ok', 'engine': engine, 'move': move})
 
@@ -316,8 +353,16 @@ def update_online_match(request, room_code):
 def chess_plays(request):
     return JsonResponse({
         'status': 'ok',
-        'quick_mates': ['Mate del loco', 'Mate del pastor', 'Mate de Legal'],
-        'openings': ['Italiana', 'Siciliana', 'Defensa Francesa', 'Gambito de Dama'],
-        'special_moves': ['Enroque corto', 'Enroque largo', 'Captura al paso', 'Promoción'],
-        'tactics': ['Clavada', 'Doble ataque', 'Desviación', 'Rayos X'],
+        'quick_mates': ['Mate del loco', 'Mate del pastor', 'Mate de Legal', 'Mate de Boden'],
+        'openings': ['Italiana', 'Siciliana', 'Defensa Francesa', 'Gambito de Dama', 'Ruy López', 'Caro-Kann'],
+        'piece_moves': {
+            'peon': '1 casilla al frente (2 desde inicio), captura en diagonal, captura al paso, promoción en octava/fila primera',
+            'torre': 'cualquier número de casillas en líneas rectas (horizontal/vertical)',
+            'caballo': 'movimiento en L (2+1), salta piezas',
+            'alfil': 'cualquier número de casillas en diagonales',
+            'dama': 'combina torre + alfil',
+            'rey': '1 casilla en cualquier dirección + enroque corto/largo',
+        },
+        'special_moves': ['Enroque corto', 'Enroque largo', 'Captura al paso', 'Promoción', 'Ahogado', 'Tablas por repetición'],
+        'tactics': ['Clavada', 'Doble ataque', 'Desviación', 'Rayos X', 'Ataque descubierto', 'Atracción'],
     })
