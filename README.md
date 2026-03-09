@@ -1,64 +1,50 @@
 # Cyborg Chess Edition
 
-Reinterpretación del proyecto **2048** a un juego de **Ajedrez local 1v1** hecho con **Python + Django**, conservando:
+Proyecto de ajedrez con Django + frontend vanilla JS.
 
-- panel izquierdo
-- footer
-- estructura general del proyecto original
-- favicon y organización de estáticos
+## Corrección del error 400 en Render
 
-## Cambios principales
+Se ajustó la configuración para aceptar dominios de Render por defecto:
 
-- tablero 8x8 con piezas de ajedrez renderizadas en frontend
-- paleta neón rosa/naranja
-- estética inspirada en una mezcla tribal futurista
-- historial de movimientos
-- detección de jaque y jaque mate
-- promoción automática de peón a reina
+- `DJANGO_ALLOWED_HOSTS` ahora incluye `.onrender.com`
+- `CSRF_TRUSTED_ORIGINS` incluye `https://*.onrender.com`
 
-## Alcance de esta edición
+## Nuevas funciones agregadas
 
-Implementado:
+- ♟ modo jugador vs IA
+- ♟ integración de motor Stockfish (con fallback si no está configurado)
+- ♟ ranking online con rating
+- ♟ multiplayer en tiempo real por sala (polling)
+- ♟ endpoint de jugadas de ajedrez (mates rápidos, aperturas, movimientos especiales y tácticos)
+- ♟ promoción manual en el cliente
+- ♟ multijugador online
+- ♟ persistencia de partidas en DB (`MatchRecord.game_state`)
 
-- movimientos base de todas las piezas
-- validación para no dejar al rey propio en jaque
-- jaque, jaque mate y tablas por falta de movimientos
-- rotación visual del tablero
+## Endpoints API
 
-No implementado en esta versión:
+- `POST /api/ai-move/`
+- `GET /api/ranking/`
+- `POST /api/submit-result/`
+- `GET /api/plays/`
+- `POST /api/match/create/`
+- `POST /api/match/<room_code>/join/`
+- `GET /api/match/<room_code>/`
+- `POST /api/match/<room_code>/update/`
 
-- enroque
-- captura al paso
-- selector manual de promoción
-- multijugador online
+## Configuración opcional de Stockfish
 
-## Cómo correrlo localmente
+```env
+STOCKFISH_BINARY=/usr/games/stockfish
+```
+
+Si no está definido, la IA usa un motor fallback con jugada legal aleatoria.
+
+## Cómo correr
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # en Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
-
-## Configuración para Supabase
-
-Este proyecto queda listo para usar **Supabase Postgres** como base de datos mediante la variable `DATABASE_URL`.
-
-1. Crea un proyecto en Supabase.
-2. Copia la cadena de conexión Postgres.
-3. Cárgala en `DATABASE_URL` dentro de Render o en tu entorno local.
-
-Ejemplo:
-
-```env
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/postgres
-```
-
-## Deploy recomendado
-
-- **App Django**: Render
-- **Base de datos**: Supabase Postgres
-
-Sí, Supabase sirve perfecto como base de datos. No es el host principal ideal para la app Django completa.

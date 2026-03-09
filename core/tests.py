@@ -1,40 +1,34 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Score
+from .models import MatchRecord, PlayerRating
 
 
-class LeaderboardViewTests(TestCase):
-    def test_leaderboard_empty_returns_ok(self):
-        response = self.client.get(reverse('leaderboard'))
-
+class ApiTests(TestCase):
+    def test_ranking_empty(self):
+        response = self.client.get(reverse('ranking'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json().get('status'), 'ok')
-        self.assertEqual(response.json().get('results'), [])
+        self.assertEqual(response.json()['results'], [])
 
-    def test_submit_score_and_leaderboard(self):
-        submit_response = self.client.post(
-            reverse('submit_score'),
-            data={'name': 'Player1', 'points': 128, 'moves': 22},
-            content_type='application/json',
-        )
-
-        self.assertEqual(submit_response.status_code, 201)
-        self.assertEqual(Score.objects.count(), 1)
-
-        leaderboard_response = self.client.get(reverse('leaderboard'))
-        payload = leaderboard_response.json()
-
-        self.assertEqual(leaderboard_response.status_code, 200)
-        self.assertEqual(payload.get('status'), 'ok')
-        self.assertEqual(len(payload.get('results', [])), 1)
-        self.assertEqual(payload['results'][0]['name'], 'Player1')
-
-    def test_submit_score_requires_name(self):
+    def test_submit_result_updates_rating(self):
         response = self.client.post(
-            reverse('submit_score'),
-            data={'name': '', 'points': 64, 'moves': 12},
+            reverse('submit_result'),
+            data='{"name":"Player1","outcome":"win"}',
             content_type='application/json',
         )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(PlayerRating.objects.get(name='Player1').rating, 1215)
 
-        self.assertEqual(response.status_code, 400)
+    def test_create_and_get_online_match(self):
+        create = self.client.post(
+            reverse('create_online_match'),
+            data='{"white_player":"Ana"}',
+            content_type='application/json',
+        )
+        self.assertEqual(create.status_code, 201)
+        room = create.json()['room_code']
+
+        get_match = self.client.get(reverse('get_online_match', kwargs={'room_code': room}))
+        self.assertEqual(get_match.status_code, 200)
+        self.assertEqual(get_match.json()['white_player'], 'Ana')
+        self.assertEqual(MatchRecord.objects.count(), 1)
