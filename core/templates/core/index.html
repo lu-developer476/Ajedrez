@@ -110,7 +110,7 @@
 
     <section class="aux-panels">
       <div class="controls panel-glow">
-        <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Multijugador online</option></select>
+        <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Online</option></select>
         <div class="ai-level-spot panel-inline" id="ai-level-spot">IA Nivel 3 · Táctica</div>
         <button id="new-game-btn" class="btn primary" type="button">Nueva partida</button>
         <button id="pause-game-btn" class="btn secondary" type="button">Pausar</button>
@@ -120,12 +120,12 @@
         <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
       </div>
       <div class="leaderboard panel-glow">
-        <div class="leaderboard-header"><p class="eyebrow">ONLINE</p><h2>Ranking online</h2></div>
+        <div class="leaderboard-header"><p class="eyebrow">ONLINE</p><h2>Ranking</h2></div>
         <ol id="ranking-list" class="move-history"></ol>
       </div>
       <div class="tips panel-glow">
         <p><span>Reglas:</span> jaque, jaque mate, tablas, enroque corto/largo, captura al paso, promoción y ahogado.</p>
-        <p><span>Movimientos:</span> peón (1 o 2 inicial + diagonal), torre (líneas), alfil (diagonales), caballo (L), dama (líneas+diagonales), rey (1 casilla + enroque).</p>
+        <p><span>Movimientos:</span> peón (1 o 2 inicial + diagonal), torre (líneas), alfil (diagonales), caballo (L), dama (líneas + diagonales), rey (1 casilla + enroque).</p>
         <p><span>Jugadas:</span> aperturas italiana, siciliana, francesa, gambito de dama, Ruy López; tácticas clavada, doble ataque, descubierta, desviación y rayos X.</p>
         <p id="room-info"><span>Sala:</span> ---</p>
       </div>
@@ -135,6 +135,8 @@
     <span class="footer-item">© <span id="year"></span> Todos los derechos reservados</span>
     <span class="footer-separator" aria-hidden="true">•</span>
     <span class="footer-item">Built with Python &amp; Django</span>
+    <span class="footer-separator" aria-hidden="true">•</span>
+    <span class="footer-item">Database powered by &amp; Supabase</span>
     <span class="footer-separator" aria-hidden="true">•</span>
     <span class="footer-item">UX/UI Interface</span>
     <span class="footer-separator" aria-hidden="true">•</span>
