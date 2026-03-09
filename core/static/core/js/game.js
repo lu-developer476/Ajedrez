@@ -12,6 +12,8 @@ const modeLabelEl = document.getElementById('mode-label');
 const roomInfoEl = document.getElementById('room-info');
 const modeSelectEl = document.getElementById('mode-select');
 const newGameBtn = document.getElementById('new-game-btn');
+const pauseGameBtn = document.getElementById('pause-game-btn');
+const restartGameBtn = document.getElementById('restart-game-btn');
 const flipBoardBtn = document.getElementById('flip-board-btn');
 const resetViewBtn = document.getElementById('reset-view-btn');
 const onlineCreateBtn = document.getElementById('online-create-btn');
@@ -31,6 +33,7 @@ const boardThemeEl = document.getElementById('board-theme');
 const whiteTimerEl = document.getElementById('white-timer');
 const blackTimerEl = document.getElementById('black-timer');
 const boardWrapEl = document.querySelector('.board-wrap');
+const aiLevelSpotEl = document.getElementById('ai-level-spot');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -45,17 +48,18 @@ const PIECE_NAMES = {
 
 const PIECE_SETS = {
   retro: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
-  medieval: {
-    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
-    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  humano: {
+    white: { p: '🛡️', r: '🏰', n: '🐎', b: '🧙', q: '👸', k: '🤴' },
+    black: { p: '🔰', r: '🗼', n: '🦄', b: '🎯', q: '🕶️', k: '👑' },
   },
-  cibernetico: {
-    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
-    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  cyborg: {
+    white: { p: '🤖', r: '🦾', n: '👹', b: '🛰️', q: '👁️', k: '🧠' },
+    black: { p: '👾', r: '⚙️', n: '💀', b: '📡', q: '🔮', k: '☣️' },
   },
-  robotico: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
-  androide: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
-  techno: { p: '◌', r: '⛶', n: '⚑', b: '⎔', q: '✷', k: '⛯' },
+  syntech: {
+    white: { p: '◉', r: '▣', n: '⟠', b: '◈', q: '✦', k: '⬢' },
+    black: { p: '◎', r: '▤', n: '⧉', b: '⬡', q: '✹', k: '⬣' },
+  },
   merc: { p: '◍', r: '♜', n: '⚙', b: '♝', q: '✶', k: '☬' },
 };
 
@@ -70,12 +74,13 @@ let audioCtx = null;
 let masterGain = null;
 let volume = 1;
 let aiLevel = 3;
-let pieceTheme = 'medieval';
+let pieceTheme = 'humano';
 let pieceColorTheme = 'original';
 let boardTheme = 'classic';
 let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
 let gameTimer = null;
+let isPaused = false;
 
 function createInitialBoard() { return [['br','bn','bb','bq','bk','bb','bn','br'],['bp','bp','bp','bp','bp','bp','bp','bp'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['wp','wp','wp','wp','wp','wp','wp','wp'],['wr','wn','wb','wq','wk','wb','wn','wr']]; }
 function createState() { return { board: createInitialBoard(), turn: 'w', moveNumber: 1, history: [], captured: { w: [], b: [] }, lastMove: null, status: 'EN CURSO' }; }
@@ -98,6 +103,7 @@ function resetGame() {
   legalMoves = [];
   whiteTimeLeft = 600;
   blackTimeLeft = 600;
+  isPaused = false;
   startTimerLoop();
   renderCoordinates();
   render();
@@ -188,7 +194,7 @@ function evaluateGameStatus() {
 }
 
 function tickGameClock() {
-  if (!state || (state.status !== 'EN CURSO' && state.status !== 'JAQUE')) return;
+  if (!state || isPaused || (state.status !== 'EN CURSO' && state.status !== 'JAQUE')) return;
   if (state.turn === 'w') whiteTimeLeft -= 1;
   else blackTimeLeft -= 1;
 
@@ -239,7 +245,7 @@ function evaluateGameStatus() {
 }
 
 function tickGameClock() {
-  if (!state || state.status !== 'EN CURSO' && state.status !== 'JAQUE') return;
+  if (!state || isPaused || state.status !== 'EN CURSO' && state.status !== 'JAQUE') return;
   if (state.turn === 'w') whiteTimeLeft -= 1;
   else blackTimeLeft -= 1;
 
@@ -272,10 +278,10 @@ function renderCoordinates() {
 }
 
 function applyBoardTheme() {
-  boardEl.classList.remove('board-theme-classic', 'board-theme-obsidian', 'board-theme-neon-grid', 'board-theme-chrome', 'board-theme-synthwave');
+  boardEl.classList.remove('board-theme-classic', 'board-theme-minimalista', 'board-theme-vidrio', 'board-theme-ecologista', 'board-theme-futurista');
   boardEl.classList.add(`board-theme-${boardTheme}`);
   if (!boardWrapEl) return;
-  boardWrapEl.classList.remove('board-shell-theme-classic', 'board-shell-theme-obsidian', 'board-shell-theme-neon-grid', 'board-shell-theme-chrome', 'board-shell-theme-synthwave');
+  boardWrapEl.classList.remove('board-shell-theme-classic', 'board-shell-theme-minimalista', 'board-shell-theme-vidrio', 'board-shell-theme-ecologista', 'board-shell-theme-futurista');
   boardWrapEl.classList.add(`board-shell-theme-${boardTheme}`);
 }
 
@@ -293,7 +299,7 @@ function render() {
   boardEl.innerHTML = '';
   applyBoardTheme();
   applyPieceColorTheme();
-  const pieceSet = PIECE_SETS[pieceTheme] || PIECE_SETS.medieval;
+  const pieceSet = PIECE_SETS[pieceTheme] || PIECE_SETS.humano;
   const rows = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
   const cols = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
 
@@ -325,10 +331,16 @@ function render() {
   whiteCapturesEl.textContent = state.captured.w.length;
   blackCapturesEl.textContent = state.captured.b.length;
   lastMoveEl.textContent = state.lastMove || '---';
-  moveHistoryEl.innerHTML = state.history.length ? state.history.map((m, i) => `<li><span class="move-badge">#${state.history.length - i}</span>${m}</li>`).join('') : '<li>Sin movimientos aún.</li>';
+  moveHistoryEl.innerHTML = state.history.length ? state.history.map((m) => `<li>${m}</li>`).join('') : '<li>Sin movimientos aún.</li>';
   modeLabelEl.textContent = mode === 'ai' ? `Jugador vs IA · Nivel ${aiLevel}` : mode === 'online' ? `Online (${roomCode || 'sin sala'})` : 'Local 1v1';
   renderClocks();
   if (aiLevelEl) aiLevelEl.style.display = mode === 'ai' ? 'block' : 'none';
+  if (aiLevelSpotEl) {
+    const txt = aiLevelEl?.options?.[aiLevelEl.selectedIndex]?.textContent || `IA Nivel ${aiLevel}`;
+    aiLevelSpotEl.textContent = txt.replace('IA Nivel ', 'IA Nivel ');
+  }
+  if (pauseGameBtn) pauseGameBtn.textContent = isPaused ? 'Reanudar' : 'Pausar';
+  if (isPaused) statusTextEl.textContent = 'PAUSADA';
 }
 
 function pushIfValid(board, moves, row, col, tr, tc) { if (!inBounds(tr, tc)) return; const p = board[row][col]; const t = board[tr][tc]; if (!t) moves.push({ row: tr, col: tc, capture: false }); else if (t[0] !== p[0]) moves.push({ row: tr, col: tc, capture: true }); }
@@ -417,13 +429,45 @@ function openCyberConfirm(message) {
   });
 }
 
+
+
+function openPromotionSelector(color) {
+  return new Promise((resolve) => {
+    closeCyberModal();
+    const options = [
+      { key: 'q', label: 'Reina' },
+      { key: 'r', label: 'Torre' },
+      { key: 'b', label: 'Alfil' },
+      { key: 'n', label: 'Caballo' },
+    ];
+    const backdrop = document.createElement('div');
+    backdrop.className = 'cyber-modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="cyber-modal panel-glow" role="dialog" aria-modal="true">
+        <h3>Promoción de peón</h3>
+        <p>${color === 'w' ? 'Blancas' : 'Negras'}: elegí la pieza para promocionar.</p>
+        <div class="cyber-modal-actions">
+          ${options.map((opt) => `<button type="button" class="btn secondary" data-piece="${opt.key}">${opt.label}</button>`).join('')}
+        </div>
+      </div>`;
+    document.body.appendChild(backdrop);
+    backdrop.querySelectorAll('[data-piece]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const piece = btn.getAttribute('data-piece') || 'q';
+        closeCyberModal();
+        resolve(piece);
+      });
+    });
+  });
+}
+
 function clickSquare(row, col) {
   evaluateGameStatus();
-  if (state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
+  if (isPaused || state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
   const piece = state.board[row][col];
   if (selected) {
     const chosen = legalMoves.find((m) => m.row === row && m.col === col);
-    if (chosen) return makeMove(selected.row, selected.col, row, col);
+    if (chosen) return makeMove(selected.row, selected.col, row, col, null);
     if (piece && piece[0] === state.turn) return selectSquare(row, col);
     selected = null;
     legalMoves = [];
@@ -438,13 +482,18 @@ function selectSquare(row, col) {
   render();
 }
 
-async function makeMove(fr, fc, tr, tc, promotionChoice = 'q') {
+async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
   const piece = state.board[fr][fc], target = state.board[tr][tc];
+  if (piece?.[1] === 'p' && ((piece[0] === 'w' && tr === 0) || (piece[0] === 'b' && tr === 7)) && !promotionChoice) {
+    promotionChoice = await openPromotionSelector(piece[0]);
+  }
   state.board[tr][tc] = piece;
   state.board[fr][fc] = null;
   applyPromotion(state.board, tr, tc, promotionChoice);
   if (target) state.captured[piece[0]].push(target);
-  state.history.unshift(`${state.moveNumber}. ${algebraic(fr, fc)} → ${algebraic(tr, tc)}`);
+  const sideText = piece[0] === 'w' ? 'Blancas' : 'Negras';
+  const pieceName = PIECE_NAMES[piece[1]] || 'Ficha';
+  state.history.unshift(`${sideText}: ${pieceName} ${state.moveNumber}. ${algebraic(fr, fc)} → ${algebraic(tr, tc)}`);
   state.lastMove = `${algebraic(fr, fc)} → ${algebraic(tr, tc)}`;
   state.turn = state.turn === 'w' ? 'b' : 'w';
   state.moveNumber += 1;
@@ -465,7 +514,7 @@ async function playAi() {
   });
   const data = await res.json();
   if (data.status !== 'ok') return;
-  await makeMove(data.move.from.row, data.move.from.col, data.move.to.row, data.move.to.col);
+  await makeMove(data.move.from.row, data.move.from.col, data.move.to.row, data.move.to.col, null);
 }
 
 async function loadRanking() {
@@ -502,8 +551,8 @@ async function executeCoordinateMove() {
   const moves = getLegalMoves(state.board, from.row, from.col);
   const chosen = moves.find((m) => m.row === to.row && m.col === to.col);
   if (!chosen) return;
-  if (state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
-  await makeMove(from.row, from.col, to.row, to.col);
+  if (isPaused || state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
+  await makeMove(from.row, from.col, to.row, to.col, null);
   commandFromEl.value = '';
   commandToEl.value = '';
 }
@@ -515,7 +564,7 @@ modeSelectEl.onchange = () => {
   if (mode === 'online' && roomCode) pollTimer = setInterval(pollOnline, 2000);
 };
 if (aiLevelEl) aiLevelEl.onchange = () => { aiLevel = Number(aiLevelEl.value) || 3; render(); };
-if (pieceThemeEl) pieceThemeEl.onchange = () => { pieceTheme = pieceThemeEl.value || 'medieval'; render(); };
+if (pieceThemeEl) pieceThemeEl.onchange = () => { pieceTheme = pieceThemeEl.value || 'humano'; render(); };
 if (pieceColorsEl) pieceColorsEl.onchange = () => { pieceColorTheme = pieceColorsEl.value || 'original'; render(); };
 if (boardThemeEl) boardThemeEl.onchange = () => { boardTheme = boardThemeEl.value || 'classic'; render(); };
 
@@ -560,9 +609,23 @@ onlineJoinBtn.onclick = async () => {
 };
 
 newGameBtn.onclick = async () => {
-  const shouldReset = await openCyberConfirm('¿Reiniciar la partida actual?');
+  const shouldReset = await openCyberConfirm('¿Iniciar una nueva partida?');
   if (shouldReset) resetGame();
 };
+
+if (restartGameBtn) {
+  restartGameBtn.onclick = async () => {
+    const shouldReset = await openCyberConfirm('¿Reiniciar partida y volver al estado inicial?');
+    if (shouldReset) resetGame();
+  };
+}
+
+if (pauseGameBtn) {
+  pauseGameBtn.onclick = () => {
+    isPaused = !isPaused;
+    render();
+  };
+}
 flipBoardBtn.onclick = () => { flipped = !flipped; renderCoordinates(); render(); };
 resetViewBtn.onclick = () => { selected = null; legalMoves = []; render(); };
 
