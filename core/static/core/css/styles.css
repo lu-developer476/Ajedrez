@@ -10,6 +10,8 @@
   --accent-3: #ffc857;
   --danger: #ff5f85;
   --success: #ffb347;
+  --audio-accent: #d5f16b;
+  --audio-accent-deep: #b8e63d;
   --board-frame: rgba(13, 8, 12, 0.92);
   --light-cell: #f6d0bc;
   --dark-cell: #8b4323;
@@ -315,11 +317,12 @@ body {
 .aux-panels {
   grid-area: bottom;
   display: grid;
-  grid-template-columns: 1fr 1fr 1.4fr;
+  grid-template-columns: 1fr 1fr 1fr 1.35fr;
   gap: 18px;
 }
 
 .controls,
+.audio-panel,
 .tips,
 .leaderboard {
   padding: 16px;
@@ -349,6 +352,73 @@ body {
 .tips p { margin: 0 0 12px; color: var(--muted); }
 .tips p:last-child { margin-bottom: 0; }
 .tips span { color: var(--accent-3); font-weight: 700; }
+
+.audio-panel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  border-color: rgba(213, 241, 107, 0.56);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03) inset,
+    0 0 26px rgba(213, 241, 107, 0.2),
+    0 18px 40px rgba(0, 0, 0, 0.36);
+}
+
+.audio-panel .eyebrow {
+  text-align: center;
+  margin-top: 2px;
+  color: var(--audio-accent);
+}
+
+.audio-state {
+  border-radius: 22px;
+  padding: 14px 16px;
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.1rem;
+  color: #1c1605;
+  background: linear-gradient(135deg, var(--audio-accent), var(--audio-accent-deep));
+  box-shadow: 0 8px 20px rgba(184, 230, 61, 0.25);
+}
+
+.audio-label {
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.05em;
+  color: var(--audio-accent);
+  font-size: 0.95rem;
+}
+
+.volume-slider {
+  width: 100%;
+  appearance: none;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--audio-accent), var(--audio-accent) var(--volume-fill, 100%), rgba(255,255,255,0.2) var(--volume-fill, 100%));
+  outline: none;
+  border: 1px solid rgba(213, 241, 107, 0.35);
+}
+
+.volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 0;
+  background: #ffe68a;
+  box-shadow: 0 0 0 3px rgba(28, 22, 5, 0.35);
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 0;
+  background: #ffe68a;
+  box-shadow: 0 0 0 3px rgba(28, 22, 5, 0.35);
+  cursor: pointer;
+}
 
 .move-history {
   margin: 0;
@@ -390,7 +460,7 @@ body {
 @media (max-width: 720px) {
   :root { --cell-size: min(10.7vw, 48px); }
   .game-shell { width: min(100%, calc(100% - 18px)); margin-top: 12px; }
-  .arena, .controls, .tips, .leaderboard, .brand-box, .stat-card { border-radius: 20px; }
+  .arena, .controls, .audio-panel, .tips, .leaderboard, .brand-box, .stat-card { border-radius: 20px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .coords-top, .coords-bottom { margin-left: 30px; }
   .piece { font-size: clamp(1.55rem, 7vw, 2.2rem); }
