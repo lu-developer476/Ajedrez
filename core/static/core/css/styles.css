@@ -202,7 +202,7 @@ body {
   position: relative;
   background: linear-gradient(145deg, rgba(17, 10, 14, 0.98), rgba(26, 10, 16, 0.98));
   border: 1px solid rgba(255, 148, 77, 0.38);
-  border-radius: 28px;
+  border-radius: 8px;
   padding: 16px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 0 32px rgba(255, 148, 77, 0.12);
   overflow-x: auto;
@@ -212,7 +212,7 @@ body {
   content: '';
   position: absolute;
   inset: 9px;
-  border-radius: 20px;
+  border-radius: 6px;
   pointer-events: none;
   opacity: 0.34;
 }
@@ -290,8 +290,8 @@ body {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border-radius: 22px;
-  overflow: hidden;
+  border-radius: 0;
+  overflow: visible;
   border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow: 0 0 0 2px rgba(255, 148, 77, 0.08), 0 0 34px rgba(255, 110, 199, 0.1);
 }
@@ -309,8 +309,8 @@ body {
   padding: 0;
 }
 
-.square.light { background: radial-gradient(circle at 30% 25%, #ffe7da, var(--light-cell)); }
-.square.dark { background: radial-gradient(circle at 30% 25%, #be643e, var(--dark-cell)); }
+.square.light { background: linear-gradient(135deg, #eedbc3, #d9b88f); }
+.square.dark { background: linear-gradient(135deg, #8f5b35, #5f351c); }
 .square:hover { filter: brightness(1.06); }
 .square.selected {
   box-shadow: inset 0 0 0 4px rgba(255, 110, 199, 0.8), 0 0 18px rgba(255, 110, 199, 0.3);
@@ -336,8 +336,29 @@ body {
 }
 
 
-.board.board-theme-classic .square.light { background: radial-gradient(circle at 30% 25%, #ffe7da, var(--light-cell)); }
-.board.board-theme-classic .square.dark { background: radial-gradient(circle at 30% 25%, #be643e, var(--dark-cell)); }
+.square[data-piece-name]:hover::before {
+  content: attr(data-piece-name);
+  position: absolute;
+  bottom: calc(100% - 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(21, 10, 6, 0.95);
+  color: #ffe8cc;
+  border: 1px solid rgba(223, 175, 102, 0.8);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  font-family: 'Orbitron', sans-serif;
+  white-space: nowrap;
+  z-index: 6;
+  pointer-events: none;
+  box-shadow: 0 8px 12px rgba(0,0,0,0.35);
+}
+
+
+.board.board-theme-classic .square.light { background: linear-gradient(135deg, #eedbc3, #d9b88f); }
+.board.board-theme-classic .square.dark { background: linear-gradient(135deg, #8f5b35, #5f351c); }
 
 .board.board-theme-obsidian .square.light { background: radial-gradient(circle at 28% 25%, #d5d7e5, #8f97b4); }
 .board.board-theme-obsidian .square.dark { background: radial-gradient(circle at 30% 25%, #495170, #22293f); }
@@ -460,9 +481,10 @@ body {
   filter: drop-shadow(0 0 10px rgba(121, 246, 255, 0.4));
 }
 .piece.theme-androide {
-  font-family: 'Orbitron', sans-serif;
-  letter-spacing: 0.03em;
-  text-shadow: 0 0 10px rgba(94, 255, 205, 0.55), 0 0 18px rgba(132, 190, 255, 0.3);
+  font-family: "Cinzel", "Times New Roman", serif;
+  letter-spacing: 0.01em;
+  font-weight: 700;
+  text-shadow: 0 2px 2px rgba(0, 0, 0, 0.45), 0 8px 14px rgba(0, 0, 0, 0.32);
 }
 .piece.theme-techno { text-shadow: 0 0 10px rgba(255, 241, 120, 0.5), 0 0 18px rgba(121, 246, 255, 0.33); }
 .piece.theme-merc { text-shadow: 0 0 10px rgba(255, 101, 188, 0.62), 0 0 24px rgba(121, 246, 255, 0.3), 0 0 30px rgba(255, 148, 77, 0.35); }
@@ -630,13 +652,14 @@ body {
   padding: 16px;
   display: grid;
   gap: 10px;
-  border-color: rgba(121, 246, 255, 0.4);
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 24px rgba(121, 246, 255, 0.2), 0 18px 40px rgba(0, 0, 0, 0.36);
+  border-color: rgba(232, 176, 102, 0.55);
+  background: linear-gradient(160deg, rgba(48, 27, 16, 0.96), rgba(24, 13, 8, 0.94));
+  box-shadow: 0 0 0 1px rgba(255,240,214,0.08) inset, 0 0 24px rgba(196, 140, 74, 0.28), 0 18px 40px rgba(0, 0, 0, 0.36);
 }
 
 .timer-panel .eyebrow {
   text-align: center;
-  color: #79f6ff;
+  color: #eec78a;
 }
 
 .timer-row {
@@ -644,10 +667,10 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border: 1px solid rgba(121, 246, 255, 0.25);
-  border-radius: 14px;
+  border: 1px solid rgba(214, 168, 104, 0.4);
+  border-radius: 10px;
   padding: 10px 12px;
-  background: rgba(7, 16, 24, 0.44);
+  background: linear-gradient(145deg, rgba(79, 45, 24, 0.75), rgba(39, 21, 10, 0.7));
 }
 
 .timer-row span {
@@ -657,7 +680,7 @@ body {
 
 .timer-row strong {
   font-family: 'Orbitron', sans-serif;
-  color: #b5fbff;
+  color: #ffe6c7;
   letter-spacing: 0.08em;
 }
 

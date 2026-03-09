@@ -33,6 +33,16 @@ const blackTimerEl = document.getElementById('black-timer');
 const boardWrapEl = document.querySelector('.board-wrap');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+const PIECE_NAMES = {
+  p: 'Peón',
+  r: 'Torre',
+  n: 'Caballo',
+  b: 'Alfil',
+  q: 'Reina',
+  k: 'Rey',
+};
+
 const PIECE_SETS = {
   retro: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
   medieval: {
@@ -44,7 +54,7 @@ const PIECE_SETS = {
     black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
   },
   robotico: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
-  androide: { p: '◍', r: '⛶', n: '⬢', b: '◇', q: '✹', k: '⛯' },
+  androide: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
   techno: { p: '◌', r: '⛶', n: '⚑', b: '⎔', q: '✷', k: '⛯' },
   merc: { p: '◍', r: '♜', n: '⚙', b: '♝', q: '✶', k: '☬' },
 };
@@ -296,6 +306,10 @@ function render() {
     const p = state.board[row][col];
     if (p) {
       const sp = document.createElement('span');
+      const sideLabel = p[0] === 'w' ? 'Blancas' : 'Negras';
+      const pieceLabel = PIECE_NAMES[p[1]] || 'Ficha';
+      sq.dataset.pieceName = `${pieceLabel} · ${sideLabel}`;
+      sq.setAttribute('aria-label', `${pieceLabel} ${sideLabel} en ${algebraic(row, col)}`);
       sp.className = `piece ${p[0] === 'w' ? 'white' : 'black'} theme-${pieceTheme}`;
       sp.textContent = getPieceSymbol(pieceSet, p[1], p[0]);
       sq.appendChild(sp);
