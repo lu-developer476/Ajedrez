@@ -130,6 +130,13 @@
     <section class="aux-panels">
       <div class="controls panel-glow">
         <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Online</option></select>
+        <select id="time-control" class="btn secondary" aria-label="Control de tiempo">
+          <option value="bullet">Bullet · 1+0</option>
+          <option value="blitz">Blitz · 3+2</option>
+          <option value="rapid" selected>Rapid · 10+0</option>
+          <option value="classical">Classical · 30+0</option>
+        </select>
+        <p id="time-control-help" class="control-help">Rapid 10+0: 10 min por lado, sin incremento.</p>
         <select id="ai-level" class="btn secondary" aria-label="Nivel de IA">
           <option value="1" selected>IA Nivel 1 · Novato</option>
           <option value="2">IA Nivel 2 · Callejera</option>

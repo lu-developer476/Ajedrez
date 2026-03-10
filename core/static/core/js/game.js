@@ -33,6 +33,8 @@ const audioStateEl = document.getElementById('audio-state');
 const commandFromEl = document.getElementById('command-from');
 const commandToEl = document.getElementById('command-to');
 const aiLevelEl = document.getElementById('ai-level');
+const timeControlEl = document.getElementById('time-control');
+const timeControlHelpEl = document.getElementById('time-control-help');
 const pieceThemeEl = document.getElementById('piece-theme');
 const pieceColorsEl = document.getElementById('piece-colors');
 const boardThemeEl = document.getElementById('board-theme');
@@ -159,6 +161,7 @@ let fontTheme = 'rajdhani';
 let fontColorTheme = 'default';
 let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
+let activeTimeControl = 'rapid';
 let gameTimer = null;
 let isPaused = false;
 let audioEnabled = true;
@@ -174,6 +177,38 @@ let activeVariations = new Set(TRAINING_VARIATIONS);
 let waitingStartColor = false;
 
 const ELO_K_FACTOR = 32;
+
+
+const TIME_CONTROLS = {
+  bullet: { key: 'bullet', label: 'Bullet', initialSeconds: 60, incrementSeconds: 0 },
+  blitz: { key: 'blitz', label: 'Blitz', initialSeconds: 180, incrementSeconds: 2 },
+  rapid: { key: 'rapid', label: 'Rapid', initialSeconds: 600, incrementSeconds: 0 },
+  classical: { key: 'classical', label: 'Classical', initialSeconds: 1800, incrementSeconds: 0 },
+};
+
+function getTimeControlConfig() {
+  return TIME_CONTROLS[activeTimeControl] || TIME_CONTROLS.rapid;
+}
+
+function getTimeControlDescription() {
+  const config = getTimeControlConfig();
+  const minutes = Math.floor(config.initialSeconds / 60);
+  return `${config.label} ${minutes}+${config.incrementSeconds}: ${minutes} min por lado, ${config.incrementSeconds ? `+${config.incrementSeconds}s por jugada` : 'sin incremento'}.`;
+}
+
+function setClocksFromTimeControl() {
+  const config = getTimeControlConfig();
+  whiteTimeLeft = config.initialSeconds;
+  blackTimeLeft = config.initialSeconds;
+}
+
+function applyIncrementForColor(color) {
+  const increment = getTimeControlConfig().incrementSeconds;
+  if (!increment) return;
+  if (color === 'w') whiteTimeLeft += increment;
+  else blackTimeLeft += increment;
+}
+
 
 function expectedScore(playerRating, opponentRating) {
   return 1 / (1 + 10 ** ((opponentRating - playerRating) / 400));
@@ -244,8 +279,7 @@ function resetGame() {
   state = createState();
   selected = null;
   legalMoves = [];
-  whiteTimeLeft = 600;
-  blackTimeLeft = 600;
+  setClocksFromTimeControl();
   isPaused = false;
   highlightLastMove = null;
   state.lastMoveQuality = null;
@@ -363,56 +397,6 @@ function startTimerLoop() {
   renderClocks();
 }
 
-
-function formatClock(totalSeconds) {
-  const mins = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-}
-
-function renderClocks() {
-  if (whiteTimerEl) whiteTimerEl.textContent = formatClock(Math.max(0, whiteTimeLeft));
-  if (blackTimerEl) blackTimerEl.textContent = formatClock(Math.max(0, blackTimeLeft));
-}
-
-function stopTimerLoop() {
-  if (gameTimer) {
-    clearInterval(gameTimer);
-    gameTimer = null;
-  }
-}
-
-function evaluateGameStatus() {
-  const check = isKingInCheck(state.board, state.turn);
-  const active = hasAny(state.board, state.turn, state);
-  state.status = check && !active ? `JAQUE MATE · ${state.turn === 'w' ? 'NEGRAS' : 'BLANCAS'} GANAN` : check ? 'JAQUE' : !active ? 'TABLAS' : 'EN CURSO';
-  if (check && state.turn === 'w' && !active) state.status = 'JAQUE MATE · NEGRAS GANAN';
-  return { check, active };
-}
-
-function tickGameClock() {
-  if (!state || isPaused || state.status !== 'EN CURSO' && state.status !== 'JAQUE') return;
-  if (state.turn === 'w') whiteTimeLeft -= 1;
-  else blackTimeLeft -= 1;
-
-  if (whiteTimeLeft <= 0) {
-    whiteTimeLeft = 0;
-    state.status = 'TIEMPO AGOTADO · NEGRAS GANAN';
-    stopTimerLoop();
-  }
-  if (blackTimeLeft <= 0) {
-    blackTimeLeft = 0;
-    state.status = 'TIEMPO AGOTADO · BLANCAS GANAN';
-    stopTimerLoop();
-  }
-  render();
-}
-
-function startTimerLoop() {
-  stopTimerLoop();
-  gameTimer = setInterval(tickGameClock, 1000);
-  renderClocks();
-}
 
 function renderCoordinates() {
   const files = flipped ? [...FILES].reverse() : FILES;
@@ -1122,6 +1106,7 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
   state.history.unshift(moveText);
   state.lastMove = `${fromSq} → ${toSq}`;
   highlightLastMove = { from: { row: fr, col: fc }, to: { row: tr, col: tc } };
+  applyIncrementForColor(piece[0]);
   state.turn = state.turn === 'w' ? 'b' : 'w';
   state.moveNumber += 1;
   selected = null;
@@ -1287,6 +1272,14 @@ modeSelectEl.onchange = () => {
   if (pollTimer) clearInterval(pollTimer);
   if (mode === 'online' && roomCode) pollTimer = setInterval(pollOnline, 2000);
 };
+
+if (timeControlEl) {
+  timeControlEl.onchange = async () => {
+    activeTimeControl = timeControlEl.value || 'rapid';
+    if (timeControlHelpEl) timeControlHelpEl.textContent = getTimeControlDescription();
+    await resetMatchWithConfigNotice();
+  };
+}
 if (aiLevelEl) {
   aiLevelEl.onchange = async () => {
     aiLevel = Number(aiLevelEl.value) || 1;
@@ -1494,6 +1487,8 @@ updateVolumeUI();
 updateVariationUI();
 updateBoardLegendDots();
 renderEloPreview();
+if (timeControlEl) timeControlEl.value = activeTimeControl;
+if (timeControlHelpEl) timeControlHelpEl.textContent = getTimeControlDescription();
 resetGame();
 loadRanking();
 loadProfile();
