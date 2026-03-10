@@ -80,6 +80,10 @@
               <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
             </div>
             <button id="flip-board-btn" class="btn secondary" type="button">Mover tablero</button>
+            <div class="leaderboard panel-inline leaderboard-compact">
+              <div class="leaderboard-header"><p class="eyebrow">ONLINE</p><h2>Ranking</h2></div>
+              <ol id="ranking-list" class="move-history"></ol>
+            </div>
           </aside>
         </div>
         <div class="coordinates coords-bottom" id="coords-bottom"></div>
@@ -176,12 +180,9 @@
         <p id="room-info"><span>Sala:</span> ---</p>
       </div>
       <div class="analysis panel-glow">
-        <div class="leaderboard-header"><p class="eyebrow">IA EXPLICATIVA</p><h2>Lectura de jugadas</h2></div>
+        <div class="leaderboard-header"><p class="eyebrow">IA EXPLICATIVA + RATING</p><h2>Lectura de jugadas y sistema ELO</h2></div>
         <p id="ai-explanation-main" class="analysis-main">Todavía no hay jugadas para explicar.</p>
         <ol id="ai-explanation-history" class="move-history ai-explanation-history"></ol>
-      </div>
-      <div class="analysis panel-glow">
-        <div class="leaderboard-header"><p class="eyebrow">RATING</p><h2>Sistema ELO</h2></div>
         <p class="analysis-main">Jugador A: <strong id="elo-a-rating">1450</strong> | Jugador B: <strong id="elo-b-rating">1320</strong></p>
         <div class="auth-grid">
           <input id="elo-a-input" class="command-input" type="number" value="1450" placeholder="ELO Jugador A">
@@ -210,10 +211,6 @@
           <button id="save-profile-btn" class="btn primary" type="button">Guardar perfil</button>
         </div>
         <ul id="user-stats-list" class="move-history"></ul>
-      </div>
-      <div class="leaderboard panel-glow">
-        <div class="leaderboard-header"><p class="eyebrow">ONLINE</p><h2>Ranking</h2></div>
-        <ol id="ranking-list" class="move-history"></ol>
       </div>
     </section>
   </main>
