@@ -102,18 +102,6 @@ const PIECE_SETS = {
     white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
     black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
   },
-  staunton: {
-    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
-    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
-  },
-  alpha: {
-    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
-    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
-  },
-  merida: {
-    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
-    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
-  },
   humano: {
     white: { p: '👷🏻‍♂️', r: '🏰', n: '🏇', b: '🫅🏻', q: '👸🏼', k: '🤴🏻' },
     black: { p: '👷🏿‍♂️', r: '🏰', n: '🏇🏿', b: '🫅🏽', q: '👸🏿', k: '🤴🏾' },
@@ -493,7 +481,7 @@ function render() {
   applyPieceColorTheme();
   applyFontTheme();
   applyFontColorTheme();
-  const pieceSet = PIECE_SETS[pieceTheme] || PIECE_SETS.humano;
+  const pieceSet = PIECE_SETS[pieceTheme] || PIECE_SETS.retro;
   const rows = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
   const cols = flipped ? [...Array(8).keys()].reverse() : [...Array(8).keys()];
   const whiteAttacked = showAttackedSquares ? collectAttackedSquares(state.board, 'w') : new Set();
