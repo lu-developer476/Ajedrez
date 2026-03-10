@@ -84,6 +84,16 @@ const TUTORIAL_ITEMS = [
   { title: 'Caballo', text: 'Movimiento en L y puede saltar piezas. Jugada ejemplo: g1 → f3.' },
   { title: 'Dama', text: 'Combina movimientos de torre y alfil, con gran alcance. Jugada ejemplo: d1 → h5.' },
   { title: 'Rey', text: 'Avanza una casilla en cualquier dirección y puede enrocarse. Jugada ejemplo: e1 → g1 (enroque corto).' },
+  { title: 'Apertura italiana', text: 'Plan clásico de desarrollo rápido: e4, Cf3 y Ac4 para presionar f7 y dominar el centro.' },
+  { title: 'Apertura siciliana', text: 'Respuesta combativa a 1.e4 con ...c5; busca desequilibrar desde temprano y jugar por contragolpe.' },
+  { title: 'Apertura francesa', text: 'Tras 1.e4 e6, las negras preparan ...d5 con estructura sólida y juego estratégico.' },
+  { title: 'Gambito de dama', text: 'Con 1.d4 d5 2.c4, blancas ofrecen peón para ganar espacio central y actividad.' },
+  { title: 'Ruy López', text: '1.e4 e5 2.Cf3 Cc6 3.Ab5: presión sobre c6/e5 y lucha posicional muy rica.' },
+  { title: 'Táctica clavada', text: 'Inmovilizás una pieza porque al moverse deja expuesta una pieza más valiosa detrás.' },
+  { title: 'Táctica doble ataque', text: 'Una sola jugada amenaza dos objetivos al mismo tiempo, forzando concesiones.' },
+  { title: 'Táctica descubierta', text: 'Movés una pieza y habilitás el ataque de otra que estaba "tapada".' },
+  { title: 'Táctica desviación', text: 'Forzás a una pieza rival a abandonar una casilla clave para luego explotar la debilidad.' },
+  { title: 'Táctica rayos X', text: 'Una pieza ataca a través de otra alineada en la misma línea o diagonal para generar amenazas ocultas.' },
 ];
 
 const PIECE_SETS = {
@@ -111,7 +121,7 @@ let pollTimer = null;
 let audioCtx = null;
 let masterGain = null;
 let volume = 1;
-let aiLevel = 3;
+let aiLevel = 1;
 let pieceTheme = 'retro';
 let pieceColorTheme = 'original';
 let boardTheme = 'classic';
@@ -586,7 +596,26 @@ function openCyberConfirm(message) {
   });
 }
 
+function openConfigNotice(title, message) {
+  return new Promise((resolve) => {
+    const backdrop = openCyberModal({
+      title,
+      className: 'cyber-modal-centered',
+      body: `<p>${message}</p>`,
+      actions: '<button type="button" class="btn primary" data-act="ok">Entendido</button>',
+    });
+    const finish = () => { closeCyberModal(); resolve(true); };
+    backdrop.querySelector('[data-act="ok"]').onclick = finish;
+    backdrop.addEventListener('click', (ev) => { if (ev.target === backdrop) finish(); });
+  });
+}
 
+async function resetMatchWithConfigNotice(title, message) {
+  await openConfigNotice(title, message);
+  waitingStartColor = true;
+  resetGame();
+  beginMatchFlow();
+}
 
 function openPromotionSelector(color) {
   return new Promise((resolve) => {
@@ -753,11 +782,23 @@ async function beginMatchFlow() {
 
 modeSelectEl.onchange = () => {
   mode = modeSelectEl.value;
+  if (mode === 'ai' && aiLevelEl) {
+    aiLevelEl.value = '1';
+    aiLevel = 1;
+  }
   render();
   if (pollTimer) clearInterval(pollTimer);
   if (mode === 'online' && roomCode) pollTimer = setInterval(pollOnline, 2000);
 };
-if (aiLevelEl) aiLevelEl.onchange = () => { aiLevel = Number(aiLevelEl.value) || 3; render(); };
+if (aiLevelEl) {
+  aiLevelEl.onchange = async () => {
+    aiLevel = Number(aiLevelEl.value) || 1;
+    render();
+    if (mode === 'ai') {
+      await resetMatchWithConfigNotice('Dificultad de IA actualizada', `Se aplicó IA Nivel ${aiLevel}. Se iniciará una nueva partida para usar la nueva dificultad.`);
+    }
+  };
+}
 if (pieceThemeEl) pieceThemeEl.onchange = () => { pieceTheme = pieceThemeEl.value || 'humano'; render(); };
 if (pieceColorsEl) pieceColorsEl.onchange = () => { pieceColorTheme = pieceColorsEl.value || 'original'; render(); };
 if (boardThemeEl) boardThemeEl.onchange = () => { boardTheme = boardThemeEl.value || 'classic'; render(); };
@@ -809,13 +850,17 @@ onlineJoinBtn.onclick = async () => {
 
 newGameBtn.onclick = async () => {
   const shouldReset = await openCyberConfirm('¿Iniciar una nueva partida?');
-  if (shouldReset) { waitingStartColor = true; resetGame(); beginMatchFlow(); }
+  if (shouldReset) {
+    await resetMatchWithConfigNotice('Nueva partida', 'Configurá color de piezas y continuá con una nueva partida.');
+  }
 };
 
 if (restartGameBtn) {
   restartGameBtn.onclick = async () => {
     const shouldReset = await openCyberConfirm('¿Reiniciar partida y volver al estado inicial?');
-    if (shouldReset) { waitingStartColor = true; resetGame(); beginMatchFlow(); }
+    if (shouldReset) {
+      await resetMatchWithConfigNotice('Partida reiniciada', 'Se reinició la partida. Elegí el color de tus piezas para comenzar.');
+    }
   };
 }
 
