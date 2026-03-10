@@ -10,6 +10,11 @@ const moveHistoryEl = document.getElementById('move-history');
 const rankingListEl = document.getElementById('ranking-list');
 const modeLabelEl = document.getElementById('mode-label');
 const roomInfoEl = document.getElementById('room-info');
+const analysisAccuracyEl = document.getElementById('analysis-accuracy');
+const analysisBestEl = document.getElementById('analysis-best');
+const analysisInaccuracyEl = document.getElementById('analysis-inaccuracy');
+const analysisMistakeEl = document.getElementById('analysis-mistake');
+const analysisBlunderEl = document.getElementById('analysis-blunder');
 const modeSelectEl = document.getElementById('mode-select');
 const newGameBtn = document.getElementById('new-game-btn');
 const pauseGameBtn = document.getElementById('pause-game-btn');
@@ -169,6 +174,9 @@ function createState() {
     },
     openingMoves: [],
     openingName: null,
+    moveEvaluations: [],
+    analysis: null,
+    lastMoveQuality: null,
   };
 }
 const clone = (b) => b.map((r) => [...r]);
@@ -198,6 +206,7 @@ function resetGame() {
   blackTimeLeft = 600;
   isPaused = false;
   highlightLastMove = null;
+  state.lastMoveQuality = null;
   if (waitingStartColor) stopTimerLoop();
   else startTimerLoop();
   renderCoordinates();
@@ -490,6 +499,134 @@ async function configureVariations() {
   updateVariationUI();
 }
 
+
+function pieceValue(piece) {
+  if (!piece) return 0;
+  const values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+  return values[piece[1]] || 0;
+}
+
+function scoreMove(board, move, color, context = state) {
+  const from = move.from;
+  const to = move.to;
+  const moving = board[from.row][from.col];
+  if (!moving) return -99999;
+
+  const next = clone(board);
+  let captured = next[to.row][to.col];
+
+  if (to.special === 'en-passant') {
+    const capturedRow = moving[0] === 'w' ? to.row + 1 : to.row - 1;
+    captured = next[capturedRow][to.col];
+    next[capturedRow][to.col] = null;
+  }
+
+  next[to.row][to.col] = moving;
+  next[from.row][from.col] = null;
+
+  if (to.special === 'castle-short') {
+    next[from.row][5] = next[from.row][7];
+    next[from.row][7] = null;
+  }
+  if (to.special === 'castle-long') {
+    next[from.row][3] = next[from.row][0];
+    next[from.row][0] = null;
+  }
+
+  const promotionPiece = to.promotion || 'q';
+  applyPromotion(next, to.row, to.col, promotionPiece);
+
+  let score = 0;
+  if (captured) score += pieceValue(captured) - Math.floor(pieceValue(moving) / 10);
+
+  const centerDistance = Math.abs(3.5 - to.row) + Math.abs(3.5 - to.col);
+  score += Math.round((7 - centerDistance) * 2);
+
+  if (moving[1] === 'p') {
+    score += (moving[0] === 'w' ? (6 - to.row) : (to.row - 1)) * 3;
+  }
+
+  const enemy = color === 'w' ? 'b' : 'w';
+  if (isKingInCheck(next, enemy)) score += 35;
+  if (isKingInCheck(next, color)) score -= 45;
+
+  const replyMoves = getAllLegalMovesForColor(next, enemy, context);
+  if (!replyMoves.length && isKingInCheck(next, enemy)) score += 10000;
+
+  return score;
+}
+
+function evaluateMoveQuality(boardBefore, executedMove, color, context = state) {
+  const legal = getAllLegalMovesForColor(boardBefore, color, context);
+  if (!legal.length) return null;
+
+  const scored = legal.map((mv) => ({ move: mv, score: scoreMove(boardBefore, mv, color, context) }));
+  scored.sort((a, b) => b.score - a.score);
+
+  const chosenScore = scoreMove(boardBefore, executedMove, color, context);
+  const bestScore = scored[0].score;
+  const diff = bestScore - chosenScore;
+
+  let grade = 'best';
+  if (diff >= 140) grade = 'blunder';
+  else if (diff >= 80) grade = 'mistake';
+  else if (diff >= 35) grade = 'inaccuracy';
+
+  return {
+    color,
+    grade,
+    diff,
+    bestScore,
+    chosenScore,
+    move: executedMove,
+  };
+}
+
+function buildPostGameAnalysis() {
+  const evals = state.moveEvaluations || [];
+  if (!evals.length) {
+    state.analysis = null;
+    return;
+  }
+
+  const summary = { best: 0, inaccuracy: 0, mistake: 0, blunder: 0 };
+  let points = 0;
+
+  evals.forEach((entry) => {
+    summary[entry.grade] += 1;
+    if (entry.grade === 'best') points += 1;
+    if (entry.grade === 'inaccuracy') points += 0.65;
+    if (entry.grade === 'mistake') points += 0.35;
+  });
+
+  state.analysis = {
+    ...summary,
+    total: evals.length,
+    accuracy: Math.round((points / evals.length) * 100),
+  };
+}
+
+function renderPostGameAnalysis() {
+  if (!analysisAccuracyEl || !analysisBestEl || !analysisInaccuracyEl || !analysisMistakeEl || !analysisBlunderEl) return;
+
+  const data = state.analysis;
+  if (!data) {
+    analysisAccuracyEl.textContent = '--%';
+    analysisBestEl.textContent = '0';
+    analysisInaccuracyEl.textContent = '0';
+    analysisMistakeEl.textContent = '0';
+    analysisBlunderEl.textContent = '0';
+    return;
+  }
+
+  analysisAccuracyEl.textContent = `${data.accuracy}%`;
+  analysisBestEl.textContent = String(data.best);
+  analysisInaccuracyEl.textContent = String(data.inaccuracy);
+  analysisMistakeEl.textContent = String(data.mistake);
+  analysisBlunderEl.textContent = String(data.blunder);
+}
+
+
 function render() {
   boardEl.innerHTML = '';
   applyBoardTheme();
@@ -511,6 +648,9 @@ function render() {
     const m = legalMoves.find((x) => x.row === row && x.col === col);
     if (m) sq.classList.add(m.capture ? 'capture' : 'legal');
     if (enableLastMoveAnimation && highlightLastMove && (highlightLastMove.from.row === row && highlightLastMove.from.col === col || highlightLastMove.to.row === row && highlightLastMove.to.col === col)) sq.classList.add('last-move');
+    if (state.lastMoveQuality && highlightLastMove && highlightLastMove.to.row === row && highlightLastMove.to.col === col) {
+      sq.classList.add(`quality-${state.lastMoveQuality}`);
+    }
     if (showAttackedSquares) {
       if (whiteAttacked.has(`${row},${col}`)) sq.classList.add('attacked-by-white');
       if (blackAttacked.has(`${row},${col}`)) sq.classList.add('attacked-by-black');
@@ -560,6 +700,7 @@ function render() {
   updateVariationUI();
   if (pauseGameBtn) pauseGameBtn.textContent = isPaused ? 'Reanudar' : 'Pausar';
   if (isPaused) statusTextEl.textContent = 'EN PAUSA';
+  renderPostGameAnalysis();
 }
 
 function pushIfValid(board, moves, row, col, tr, tc) {
@@ -825,6 +966,7 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
   let target = state.board[tr][tc];
   const legalMove = getLegalMoves(state.board, fr, fc, state).find((m) => m.row === tr && m.col === tc);
   if (!piece || !legalMove) return;
+  const boardBeforeMove = clone(state.board);
 
   const isPromotionMove = piece[1] === 'p' && ((piece[0] === 'w' && tr === 0) || (piece[0] === 'b' && tr === 7));
   if (isPromotionMove && !promotionChoice) promotionChoice = await openPromotionSelector(piece[0]);
@@ -885,6 +1027,12 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
   const fromSq = algebraic(fr, fc);
   const toSq = algebraic(tr, tc);
   const openingMove = `${fromSq}${toSq}`;
+  const analyzedMove = { from: { row: fr, col: fc }, to: { row: tr, col: tc, special: legalMove.special, promotion: promotionChoice || 'q' } };
+  const quality = evaluateMoveQuality(boardBeforeMove, analyzedMove, piece[0], state);
+  if (quality) {
+    state.moveEvaluations.unshift(quality);
+    state.lastMoveQuality = quality.grade;
+  }
   state.openingMoves.push(openingMove);
   state.openingName = detectOpening(state.openingMoves);
   const moveText = target
@@ -898,6 +1046,8 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
   selected = null;
   legalMoves = [];
   evaluateGameStatus();
+  if (state.status !== 'EN CURSO' && state.status !== 'JAQUE') buildPostGameAnalysis();
+  else state.analysis = null;
   playMoveSound(Boolean(target), state.status);
   render();
   if (mode === 'online' && roomCode) await syncOnline();
@@ -1106,6 +1256,7 @@ resetViewBtn.onclick = () => {
   selected = null;
   legalMoves = [];
   highlightLastMove = null;
+  state.lastMoveQuality = null;
   if (commandFromEl) commandFromEl.value = '';
   if (commandToEl) commandToEl.value = '';
   render();
