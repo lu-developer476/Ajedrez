@@ -616,6 +616,45 @@ def chess_plays(request):
     return JsonResponse({
         'status': 'ok',
         'quick_mates': ['Mate del loco', 'Mate del pastor', 'Mate de Legal', 'Mate de Boden'],
+        'training_mode': {
+            'mate_in_1': [
+                'Mate de pasillo',
+                'Mate en la esquina con dama',
+                'Mate con sacrificio en h7',
+            ],
+            'mate_in_2': [
+                'Mate del pastor (ataque a f7)',
+                'Patrón de Anastasia',
+                'Red de mate con dama + alfil',
+            ],
+            'mate_in_3': [
+                'Patrón Boden en 3',
+                'Ataque doble con jaque descubierto',
+                'Desviación + red de mate',
+            ],
+            'mate_in_4': [
+                'Ataque de minoría y red final',
+                'Dominación de casillas oscuras',
+                'Línea forzada con sacrificio de calidad',
+            ],
+            'mate_in_5': [
+                'Combinación de atracción y bloqueo',
+                'Despeje de columna y mate en primera',
+                'Secuencia forzada de jaques',
+            ],
+            'win_material': [
+                'Ganar dama por clavada absoluta',
+                'Tenedor de caballo a rey y dama',
+                'Desviación de defensor para capturar torre',
+                'Sobrecarga de pieza defensora',
+                'Rayos X sobre pieza mayor',
+            ],
+            'endgames': [
+                'Rey y peón vs rey (oposición)',
+                'Torre activa en final de torres',
+                'Triangulación con reyes',
+            ],
+        },
         'openings': ['Italiana', 'Siciliana', 'Defensa Francesa', 'Gambito de Dama', 'Ruy López', 'Caro-Kann'],
         'piece_moves': {
             'peon': '1 casilla al frente (2 desde inicio), captura en diagonal, captura al paso, promoción en octava/fila primera',
