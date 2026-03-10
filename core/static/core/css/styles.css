@@ -276,6 +276,10 @@ body {
   gap: 10px;
 }
 
+.side-stack > .btn {
+  width: 100%;
+}
+
 .command-panel {
   min-width: 100%;
   max-width: 100%;
@@ -1198,7 +1202,8 @@ body {
 
 .analysis-legend {
   margin-top: 12px;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  color: var(--text);
 }
 
 
