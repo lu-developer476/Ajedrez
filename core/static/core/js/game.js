@@ -76,6 +76,13 @@ const TRAINING_VARIATIONS = [
   'táctica rayos x',
 ];
 
+const OPENING_BOOK = [
+  {
+    name: 'Siciliana Najdorf',
+    sequence: ['d2d3'],
+  },
+];
+
 const TUTORIAL_ITEMS = [
   { title: 'Reglas', text: 'Jaque, jaque mate, tablas, enroque corto/largo, captura al paso, promoción y ahogado.' },
   { title: 'Movimientos especiales', text: 'Enroque: movés Rey y Torre en una sola jugada si no se movieron y no hay jaque en el camino. Captura en passant: un peón puede capturar al paso justo después de un avance doble rival.' },
@@ -160,11 +167,19 @@ function createState() {
       w: { short: true, long: true },
       b: { short: true, long: true },
     },
+    openingMoves: [],
+    openingName: null,
   };
 }
 const clone = (b) => b.map((r) => [...r]);
 const inBounds = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
 const algebraic = (r, c) => `${FILES[c]}${8 - r}`;
+
+function detectOpening(openingMoves) {
+  const matching = OPENING_BOOK.filter((line) => line.sequence.every((mv, idx) => openingMoves[idx] === mv));
+  if (!matching.length) return null;
+  return matching.sort((a, b) => b.sequence.length - a.sequence.length)[0].name;
+}
 
 function parseSquare(input) {
   if (!input) return null;
@@ -867,12 +882,16 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
 
   const sideText = piece[0] === 'w' ? 'BLANCAS' : 'NEGRAS';
   const pieceName = PIECE_NAMES[piece[1]] || 'Ficha';
+  const fromSq = algebraic(fr, fc);
   const toSq = algebraic(tr, tc);
+  const openingMove = `${fromSq}${toSq}`;
+  state.openingMoves.push(openingMove);
+  state.openingName = detectOpening(state.openingMoves);
   const moveText = target
     ? `${sideText}: ${pieceName} x ${toSq} → ${pieceName.toLowerCase()} captura en ${toSq}`
-    : `${sideText}: ${pieceName} ${state.moveNumber}. ${algebraic(fr, fc)} → ${toSq}`;
+    : `${sideText}: ${pieceName} ${state.moveNumber}. ${fromSq} → ${toSq}${state.openingName ? ` jugando una ${state.openingName}` : ''}`;
   state.history.unshift(moveText);
-  state.lastMove = `${algebraic(fr, fc)} → ${toSq}`;
+  state.lastMove = `${fromSq} → ${toSq}`;
   highlightLastMove = { from: { row: fr, col: fc }, to: { row: tr, col: tc } };
   state.turn = state.turn === 'w' ? 'b' : 'w';
   state.moveNumber += 1;
