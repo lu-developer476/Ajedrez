@@ -15,6 +15,7 @@ const analysisBestEl = document.getElementById('analysis-best');
 const analysisInaccuracyEl = document.getElementById('analysis-inaccuracy');
 const analysisMistakeEl = document.getElementById('analysis-mistake');
 const analysisBlunderEl = document.getElementById('analysis-blunder');
+const advantageHistoryEl = document.getElementById('advantage-history');
 const modeSelectEl = document.getElementById('mode-select');
 const newGameBtn = document.getElementById('new-game-btn');
 const pauseGameBtn = document.getElementById('pause-game-btn');
@@ -175,6 +176,7 @@ function createState() {
     openingMoves: [],
     openingName: null,
     moveEvaluations: [],
+    advantageHistory: [],
     analysis: null,
     lastMoveQuality: null,
   };
@@ -500,6 +502,42 @@ async function configureVariations() {
 }
 
 
+function formatAdvantageScore(score) {
+  const normalized = Number.isFinite(score) ? score : 0;
+  const side = normalized >= 0 ? 'White' : 'Black';
+  return `${side} +${Math.abs(normalized).toFixed(1)}`;
+}
+
+function calculateMaterialBalance(board) {
+  let white = 0;
+  let black = 0;
+  for (const row of board) {
+    for (const piece of row) {
+      if (!piece) continue;
+      const value = pieceValue(piece);
+      if (piece[0] === 'w') white += value;
+      else black += value;
+    }
+  }
+  return (white - black) / 100;
+}
+
+function renderAdvantageHistory() {
+  if (!advantageHistoryEl) return;
+  const entries = (state.advantageHistory || []).slice(0, 20);
+  if (!entries.length) {
+    advantageHistoryEl.innerHTML = '<span class="advantage-empty">Sin datos de ventaja aún.</span>';
+    return;
+  }
+
+  advantageHistoryEl.innerHTML = entries
+    .map((score) => {
+      const sideClass = score >= 0 ? 'white' : 'black';
+      return `<span class="advantage-chip ${sideClass}">${formatAdvantageScore(score)}</span>`;
+    })
+    .join('<span class="advantage-divider" aria-hidden="true">|</span>');
+}
+
 function pieceValue(piece) {
   if (!piece) return 0;
   const values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
@@ -694,6 +732,7 @@ function render() {
   blackCapturesEl.textContent = state.captured.b.length;
   lastMoveEl.textContent = state.lastMove || '---';
   moveHistoryEl.innerHTML = state.history.length ? state.history.map((m) => `<li>${m}</li>`).join('') : '<li>Sin movimientos aún.</li>';
+  renderAdvantageHistory();
   modeLabelEl.textContent = mode === 'ai' ? `Jugador vs IA · Nivel ${aiLevel}` : mode === 'online' ? `Online (${roomCode || 'sin sala'})` : 'Local 1v1';
   renderClocks();
   if (aiLevelEl) aiLevelEl.style.display = mode === 'ai' ? 'block' : 'none';
@@ -1033,6 +1072,8 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
     state.moveEvaluations.unshift(quality);
     state.lastMoveQuality = quality.grade;
   }
+  const advantageScore = calculateMaterialBalance(state.board);
+  state.advantageHistory.unshift(advantageScore);
   state.openingMoves.push(openingMove);
   state.openingName = detectOpening(state.openingMoves);
   const moveText = target
