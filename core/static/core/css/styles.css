@@ -739,6 +739,7 @@ body {
 .btn.danger { background: linear-gradient(135deg, #ff7e5f, #ff4e7a); color: #fff3f3; }
 
 #mode-select,
+#time-control,
 #ai-level,
 #piece-theme,
 #piece-colors,
@@ -757,6 +758,16 @@ body {
 
 .controls .btn {
   width: 100%;
+}
+
+
+.control-help {
+  grid-column: 1 / -1;
+  margin: 0;
+  text-align: center;
+  color: #ffe6c7;
+  font-size: 0.84rem;
+  opacity: 0.9;
 }
 
 .ai-level-spot {
