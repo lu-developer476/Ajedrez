@@ -66,6 +66,12 @@ const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
 const saveProfileBtn = document.getElementById('save-profile-btn');
 const userStatsListEl = document.getElementById('user-stats-list');
+const eloAInputEl = document.getElementById('elo-a-input');
+const eloBInputEl = document.getElementById('elo-b-input');
+const eloResultEl = document.getElementById('elo-result');
+const eloARatingEl = document.getElementById('elo-a-rating');
+const eloBRatingEl = document.getElementById('elo-b-rating');
+const eloAfterEl = document.getElementById('elo-after');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -166,6 +172,30 @@ let enableLastMoveAnimation = false;
 let highlightLastMove = null;
 let activeVariations = new Set(TRAINING_VARIATIONS);
 let waitingStartColor = false;
+
+const ELO_K_FACTOR = 32;
+
+function expectedScore(playerRating, opponentRating) {
+  return 1 / (1 + 10 ** ((opponentRating - playerRating) / 400));
+}
+
+function calculateEloDelta(playerRating, opponentRating, score) {
+  return Math.round(ELO_K_FACTOR * (score - expectedScore(playerRating, opponentRating)));
+}
+
+function renderEloPreview() {
+  if (!eloAInputEl || !eloBInputEl || !eloResultEl || !eloAfterEl) return;
+  const ratingA = Number(eloAInputEl.value) || 1450;
+  const ratingB = Number(eloBInputEl.value) || 1320;
+  let scoreA = 1;
+  if (eloResultEl.value === 'draw') scoreA = 0.5;
+  if (eloResultEl.value === 'b_win') scoreA = 0;
+  const deltaA = calculateEloDelta(ratingA, ratingB, scoreA);
+  const deltaB = calculateEloDelta(ratingB, ratingA, 1 - scoreA);
+  if (eloARatingEl) eloARatingEl.textContent = String(ratingA);
+  if (eloBRatingEl) eloBRatingEl.textContent = String(ratingB);
+  eloAfterEl.textContent = `Después de la partida: ${deltaA >= 0 ? '+' : ''}${deltaA} | ${deltaB >= 0 ? '+' : ''}${deltaB}`;
+}
 
 function createInitialBoard() { return [['br','bn','bb','bq','bk','bb','bn','br'],['bp','bp','bp','bp','bp','bp','bp','bp'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['wp','wp','wp','wp','wp','wp','wp','wp'],['wr','wn','wb','wq','wk','wb','wn','wr']]; }
 function createState() {
@@ -1456,9 +1486,14 @@ if (commandFromEl && commandToEl) {
   });
 }
 
+if (eloAInputEl) eloAInputEl.addEventListener('input', renderEloPreview);
+if (eloBInputEl) eloBInputEl.addEventListener('input', renderEloPreview);
+if (eloResultEl) eloResultEl.addEventListener('change', renderEloPreview);
+
 updateVolumeUI();
 updateVariationUI();
 updateBoardLegendDots();
+renderEloPreview();
 resetGame();
 loadRanking();
 loadProfile();
