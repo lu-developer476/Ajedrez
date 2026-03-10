@@ -1200,3 +1200,14 @@ body {
   margin-top: 12px;
   font-size: 0.9rem;
 }
+
+
+.ai-explanation-history {
+  margin-top: 10px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.ai-explanation-history li {
+  line-height: 1.35;
+}
