@@ -15,6 +15,8 @@ const analysisBestEl = document.getElementById('analysis-best');
 const analysisInaccuracyEl = document.getElementById('analysis-inaccuracy');
 const analysisMistakeEl = document.getElementById('analysis-mistake');
 const analysisBlunderEl = document.getElementById('analysis-blunder');
+const aiExplanationMainEl = document.getElementById('ai-explanation-main');
+const aiExplanationHistoryEl = document.getElementById('ai-explanation-history');
 const advantageHistoryEl = document.getElementById('advantage-history');
 const modeSelectEl = document.getElementById('mode-select');
 const newGameBtn = document.getElementById('new-game-btn');
@@ -298,6 +300,7 @@ function createState() {
     advantageHistory: [],
     analysis: null,
     lastMoveQuality: null,
+    moveExplanations: [],
   };
 }
 const clone = (b) => b.map((r) => [...r]);
@@ -662,6 +665,39 @@ function scoreMove(board, move, color, context = state) {
   return score;
 }
 
+function squareToHuman(row, col) {
+  return algebraic(row, col);
+}
+
+function qualityLabel(grade) {
+  const labels = {
+    best: 'Excelente',
+    inaccuracy: 'Imprecisión',
+    mistake: 'Error',
+    blunder: 'Blunder',
+  };
+  return labels[grade] || 'Jugada';
+}
+
+function buildMoveExplanation({ piece, color, from, to, target, quality, mode: currentMode }) {
+  const side = color === 'w' ? 'Blancas' : 'Negras';
+  const pieceName = PIECE_NAMES[piece[1]] || 'pieza';
+  const action = target ? `captura ${PIECE_NAMES[target[1]] || 'pieza'} en ${squareToHuman(to.row, to.col)}` : `juega a ${squareToHuman(to.row, to.col)}`;
+
+  const guidanceByGrade = {
+    best: 'Mejora coordinación y mantiene el plan principal.',
+    inaccuracy: 'Es jugable, pero había una continuación más precisa.',
+    mistake: 'Cede iniciativa o estructura y exige defender con cuidado.',
+    blunder: 'Pierde demasiado y cambia la evaluación de forma crítica.',
+  };
+
+  const modeHint = currentMode === 'training'
+    ? 'Modo entrenamiento: pensá candidate moves antes de ejecutar.'
+    : 'Partida real: priorizá seguridad del rey y actividad de piezas.';
+
+  return `${side} · ${pieceName} ${squareToHuman(from.row, from.col)}→${squareToHuman(to.row, to.col)} (${qualityLabel(quality.grade)}): ${action}. ${guidanceByGrade[quality.grade]} ${modeHint}`;
+}
+
 function evaluateMoveQuality(boardBefore, executedMove, color, context = state) {
   const legal = getAllLegalMovesForColor(boardBefore, color, context);
   if (!legal.length) return null;
@@ -732,6 +768,22 @@ function renderPostGameAnalysis() {
   analysisBlunderEl.textContent = String(data.blunder);
 }
 
+
+function renderMoveExplanations() {
+  if (!aiExplanationMainEl || !aiExplanationHistoryEl || !state) return;
+  const entries = state.moveExplanations || [];
+  if (!entries.length) {
+    aiExplanationMainEl.textContent = 'Todavía no hay jugadas para explicar.';
+    aiExplanationHistoryEl.innerHTML = '<li>La IA explicativa aparecerá a medida que se juegue.</li>';
+    return;
+  }
+
+  aiExplanationMainEl.textContent = entries[0].text;
+  aiExplanationHistoryEl.innerHTML = entries
+    .slice(0, 8)
+    .map((entry) => `<li><strong>${entry.tag}:</strong> ${entry.text}</li>`)
+    .join('');
+}
 
 function render() {
   boardEl.innerHTML = '';
@@ -814,6 +866,7 @@ function render() {
   if (pauseGameBtn) pauseGameBtn.textContent = isPaused ? 'Reanudar' : 'Pausar';
   if (isPaused) statusTextEl.textContent = 'EN PAUSA';
   renderPostGameAnalysis();
+  renderMoveExplanations();
 }
 
 function pushIfValid(board, moves, row, col, tr, tc) {
@@ -1145,6 +1198,19 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
   if (quality) {
     state.moveEvaluations.unshift(quality);
     state.lastMoveQuality = quality.grade;
+    const explanationText = buildMoveExplanation({
+      piece,
+      color: piece[0],
+      from: { row: fr, col: fc },
+      to: { row: tr, col: tc },
+      target,
+      quality,
+      mode,
+    });
+    state.moveExplanations.unshift({
+      tag: qualityLabel(quality.grade),
+      text: explanationText,
+    });
   }
   const advantageScore = calculateMaterialBalance(state.board);
   state.advantageHistory.unshift(advantageScore);
