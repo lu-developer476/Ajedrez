@@ -39,6 +39,7 @@
           <label for="volume-slider" class="audio-label">Volumen</label>
           <input id="volume-slider" class="volume-slider" type="range" min="0" max="100" value="100" aria-label="Control de volumen">
         </article>
+        <button id="flip-board-btn" class="btn secondary stat-level-card" type="button">Mover tablero</button>
       </div>
     </section>
 
@@ -73,17 +74,10 @@
       </div>
       <div class="board-info panel-inline">
         <div><span class="mini-label">Último movimiento</span><strong id="last-move">---</strong></div>
-        <div><span class="mini-label">Promoción manual</span><strong id="promotion-mode">Reina/torre/alfil/caballo</strong></div>
+        <div><span class="mini-label">Promoción manual</span><strong id="promotion-mode">Reina | Torre | Alfil | Caballo</strong></div>
         <div><span class="mini-label">Modo</span><strong id="mode-label">Local 1v1</strong></div>
       </div>
       <div class="theme-selects panel-inline">
-        <select id="ai-level" class="btn secondary" aria-label="Nivel de IA">
-          <option value="1">IA Nivel 1 · Novato</option>
-          <option value="2">IA Nivel 2 · Callejera</option>
-          <option value="3" selected>IA Nivel 3 · Élite</option>
-          <option value="4">IA Nivel 4 · Profesional</option>
-          <option value="5">IA Nivel 5 · Blackwall</option>
-        </select>
         <select id="piece-theme" class="btn secondary" aria-label="Estilo de fichas">
           <option value="retro" selected>Fichas · Retro</option>
           <option value="humano">Fichas · Medieval</option>
@@ -135,11 +129,17 @@
     <section class="aux-panels">
       <div class="controls panel-glow">
         <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="online">Online</option></select>
+        <select id="ai-level" class="btn secondary" aria-label="Nivel de IA">
+          <option value="1" selected>IA Nivel 1 · Novato</option>
+          <option value="2">IA Nivel 2 · Callejera</option>
+          <option value="3">IA Nivel 3 · Élite</option>
+          <option value="4">IA Nivel 4 · Profesional</option>
+          <option value="5">IA Nivel 5 · Blackwall</option>
+        </select>
         <button id="open-tutorial-panel-btn" class="btn secondary" type="button">Tutorial</button>
         <button id="new-game-btn" class="btn primary" type="button">Nueva partida</button>
         <button id="pause-game-btn" class="btn secondary" type="button">Pausar</button>
         <button id="restart-game-btn" class="btn danger" type="button">Reiniciar partida</button>
-        <button id="flip-board-btn" class="btn secondary" type="button">Girar tablero</button>
         <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
         <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
       </div>

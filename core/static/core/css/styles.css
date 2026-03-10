@@ -101,6 +101,16 @@ body {
   --font-title: 'Cinzel', serif;
 }
 
+.game-shell.font-theme-rajdhani .btn,
+.game-shell.font-theme-rajdhani .stat-card strong,
+.game-shell.font-theme-rajdhani .board-info strong,
+.game-shell.font-theme-rajdhani .coordinates,
+.game-shell.font-theme-rajdhani .audio-state,
+.game-shell.font-theme-rajdhani .audio-label {
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 0.02em;
+}
+
 .game-shell.font-color-default {
   --text: #ffe8dd;
   --muted: #ffc2aa;
@@ -1009,7 +1019,17 @@ body {
 .footer-separator { color: rgba(255,255,255,0.25); }
 
 @media (max-width: 1120px) {
-  .board-main-row { flex-wrap: wrap; }
+  .board-main-row {
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+  }
+  .side-stack {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+    gap: 12px;
+  }
   .command-panel .mini-label {
     font-size: 0.92rem;
     letter-spacing: 0.22em;
@@ -1058,6 +1078,6 @@ body {
   .coords-top, .coords-bottom { margin-left: 30px; }
   .piece { font-size: clamp(1.55rem, 7vw, 2.2rem); }
   .footer { font-size: 0.86rem; }
-  .side-stack { min-width: 140px; }
+  .side-stack { min-width: 140px; grid-template-columns: 1fr; }
   .controls { grid-template-columns: 1fr; }
 }
