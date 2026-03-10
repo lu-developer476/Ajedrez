@@ -885,14 +885,31 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
 }
 
 async function playAi() {
-  const res = await fetch('/api/ai-move/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ board: state.board, color: 'b', difficulty: aiLevel }),
-  });
-  const data = await res.json();
-  if (data.status !== 'ok') return;
-  await makeMove(data.move.from.row, data.move.from.col, data.move.to.row, data.move.to.col, null);
+  const fallbackMove = () => {
+    const legal = getAllLegalMovesForColor(state.board, 'b', state);
+    if (!legal.length) return null;
+    return legal[Math.floor(Math.random() * legal.length)];
+  };
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch('/api/ai-move/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ board: state.board, color: 'b', difficulty: aiLevel }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    const data = await res.json();
+    const chosen = data.status === 'ok' && data.move ? data.move : fallbackMove();
+    if (!chosen) return;
+    await makeMove(chosen.from.row, chosen.from.col, chosen.to.row, chosen.to.col, null);
+  } catch (err) {
+    const chosen = fallbackMove();
+    if (!chosen) return;
+    await makeMove(chosen.from.row, chosen.from.col, chosen.to.row, chosen.to.col, null);
+  }
 }
 
 async function loadRanking() {
@@ -935,38 +952,32 @@ async function executeCoordinateMove() {
   commandToEl.value = '';
 }
 
-function setInitialBoardTurn(color) {
-  if (color === 'b') {
-    state.turn = 'b';
-    state.moveNumber = 1;
-  } else {
-    state.turn = 'w';
-  }
+function setInitialBoardTurn() {
+  state.turn = 'w';
+  state.moveNumber = 1;
 }
 
 function askStartColor() {
-  return new Promise((resolve) => {
-    const backdrop = openCyberModal({
-      title: 'Inicio de partida',
-      className: 'cyber-modal-centered',
-      body: '<p>¿Con qué color de piezas querés empezar la partida?</p>',
-      actions: `
-        <button type="button" class="btn primary" data-color="w">BLANCAS</button>
-        <button type="button" class="btn secondary" data-color="b">NEGRAS</button>`,
-    });
-    const finish = (color) => {
-      closeCyberModal();
-      resolve(color);
-    };
-    backdrop.querySelectorAll('[data-color]').forEach((btn) => {
-      btn.addEventListener('click', () => finish(btn.getAttribute('data-color') || 'w'));
-    });
-  });
+  return openConfigNotice(
+    'Regla oficial aplicada',
+    'En ajedrez, las BLANCAS siempre inician la partida. El juego arrancará automáticamente con BLANCAS.'
+  ).then(() => 'w');
+}
+
+function getAllLegalMovesForColor(board, color, context = state) {
+  const moves = [];
+  for (let r = 0; r < 8; r += 1) for (let c = 0; c < 8; c += 1) {
+    const piece = board[r][c];
+    if (!piece || piece[0] !== color) continue;
+    const legal = getLegalMoves(board, r, c, context);
+    legal.forEach((mv) => moves.push({ from: { row: r, col: c }, to: mv }));
+  }
+  return moves;
 }
 
 async function beginMatchFlow() {
-  const startingColor = await askStartColor();
-  setInitialBoardTurn(startingColor);
+  await askStartColor();
+  setInitialBoardTurn();
   waitingStartColor = false;
   startTimerLoop();
   render();

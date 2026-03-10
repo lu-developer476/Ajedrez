@@ -2,7 +2,6 @@ import json
 import os
 import random
 import string
-import subprocess
 from copy import deepcopy
 
 from django.http import JsonResponse
@@ -201,8 +200,6 @@ def _piece_square_bonus(piece, row, col):
 def _evaluate_board(board, color):
     score = 0
     enemy = 'b' if color == 'w' else 'w'
-    mobility_self = len(_all_legal_moves(board, color))
-    mobility_enemy = len(_all_legal_moves(board, enemy))
 
     for r in range(8):
         for c in range(8):
@@ -212,7 +209,6 @@ def _evaluate_board(board, color):
             value = _piece_value(piece) + _piece_square_bonus(piece, r, c)
             score += value if piece[0] == color else -value
 
-    score += (mobility_self - mobility_enemy) * 6
     if _in_check(board, enemy):
         score += 40
     if _in_check(board, color):
@@ -292,7 +288,7 @@ def _minimax(board, root_color, to_move, depth, alpha, beta):
 
 def _pick_move_for_difficulty(board, color, difficulty):
     level = max(1, min(5, int(difficulty or 3)))
-    depth_by_level = {1: 1, 2: 2, 3: 2, 4: 3, 5: 3}
+    depth_by_level = {1: 1, 2: 1, 3: 2, 4: 2, 5: 2}
     legal = _ordered_moves(board, color)
     if not legal:
         return None
@@ -331,16 +327,7 @@ def _try_stockfish_move(board, color):
     stockfish_bin = os.getenv('STOCKFISH_BINARY', '').strip()
     if not stockfish_bin:
         return None
-
-    moves = _all_legal_moves(board, color)
-    if not moves:
-        return None
-
-    try:
-        subprocess.run([stockfish_bin, 'quit'], capture_output=True, text=True, timeout=1)
-        return random.choice(moves)
-    except Exception:
-        return None
+    return None
 
 
 @require_http_methods(['POST'])
