@@ -102,6 +102,18 @@ const PIECE_SETS = {
     white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
     black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
   },
+  staunton: {
+    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
+    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  },
+  alpha: {
+    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
+    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  },
+  merida: {
+    white: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
+    black: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' },
+  },
   humano: {
     white: { p: '👷🏻‍♂️', r: '🏰', n: '🏇', b: '🫅🏻', q: '👸🏼', k: '🤴🏻' },
     black: { p: '👷🏿‍♂️', r: '🏰', n: '🏇🏿', b: '🫅🏽', q: '👸🏿', k: '🤴🏾' },
@@ -514,6 +526,7 @@ function render() {
       sq.dataset.pieceName = `${pieceLabel} · ${sideLabel}`;
       sq.setAttribute('aria-label', `${pieceLabel} ${sideLabel} en ${algebraic(row, col)}`);
       sp.className = `piece ${p[0] === 'w' ? 'white' : 'black'} theme-${pieceTheme}`;
+      sp.dataset.pieceType = p[1];
       if (moveAnimationStyle === 'deslizante') sp.classList.add('animated-piece');
       sp.textContent = getPieceSymbol(pieceSet, p[1], p[0]);
       sq.appendChild(sp);
@@ -1002,7 +1015,7 @@ if (aiLevelEl) {
     }
   };
 }
-if (pieceThemeEl) pieceThemeEl.onchange = () => { pieceTheme = pieceThemeEl.value || 'humano'; render(); };
+if (pieceThemeEl) pieceThemeEl.onchange = () => { pieceTheme = pieceThemeEl.value || 'retro'; render(); };
 if (pieceColorsEl) pieceColorsEl.onchange = () => { pieceColorTheme = pieceColorsEl.value || 'original'; render(); };
 if (boardThemeEl) boardThemeEl.onchange = () => { boardTheme = boardThemeEl.value || 'classic'; render(); };
 if (fontThemeEl) fontThemeEl.onchange = () => { fontTheme = fontThemeEl.value || 'rajdhani'; render(); };
