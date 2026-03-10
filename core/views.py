@@ -4,6 +4,8 @@ import random
 import string
 from copy import deepcopy
 
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils.timezone import now
@@ -31,6 +33,126 @@ def _payload(request):
     except json.JSONDecodeError:
         return {}
 
+
+
+
+def _serialize_user(user):
+    stats = user.stats
+    profile = user.profile
+    return {
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'avatar_url': profile.avatar_url,
+        'stats': {
+            'games_played': stats.games_played,
+            'wins': stats.wins,
+            'losses': stats.losses,
+            'draws': stats.draws,
+            'rating': stats.rating,
+            'best_victory': stats.best_victory,
+        }
+    }
+
+
+@require_http_methods(['POST'])
+@csrf_exempt
+def register_user(request):
+    data = _payload(request)
+    username = (data.get('username') or '').strip()
+    email = (data.get('email') or '').strip()
+    password = data.get('password') or ''
+
+    if len(username) < 3 or len(password) < 6:
+        return JsonResponse({'status': 'error', 'message': 'Usuario o contraseña inválidos'}, status=400)
+    if User.objects.filter(username__iexact=username).exists():
+        return JsonResponse({'status': 'error', 'message': 'El usuario ya existe'}, status=409)
+
+    user = User.objects.create_user(username=username, email=email, password=password)
+    login(request, user)
+    return JsonResponse({'status': 'ok', 'user': _serialize_user(user)}, status=201)
+
+
+@require_http_methods(['POST'])
+@csrf_exempt
+def login_user(request):
+    data = _payload(request)
+    username = (data.get('username') or '').strip()
+    password = data.get('password') or ''
+
+    user = authenticate(request, username=username, password=password)
+    if not user:
+        return JsonResponse({'status': 'error', 'message': 'Credenciales inválidas'}, status=401)
+
+    login(request, user)
+    return JsonResponse({'status': 'ok', 'user': _serialize_user(user)})
+
+
+@require_http_methods(['POST'])
+@csrf_exempt
+def logout_user(request):
+    logout(request)
+    return JsonResponse({'status': 'ok'})
+
+
+@require_GET
+def user_profile(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'No autenticado'}, status=401)
+    return JsonResponse({'status': 'ok', 'user': _serialize_user(request.user)})
+
+
+@require_http_methods(['POST'])
+@csrf_exempt
+def update_user_profile(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'No autenticado'}, status=401)
+
+    data = _payload(request)
+    avatar_url = (data.get('avatar_url') or '').strip()
+    best_victory = (data.get('best_victory') or '').strip()
+
+    if avatar_url:
+        request.user.profile.avatar_url = avatar_url
+        request.user.profile.save(update_fields=['avatar_url'])
+
+    if best_victory:
+        request.user.stats.best_victory = best_victory[:120]
+        request.user.stats.save(update_fields=['best_victory', 'updated_at'])
+
+    return JsonResponse({'status': 'ok', 'user': _serialize_user(request.user)})
+
+
+@require_http_methods(['POST'])
+@csrf_exempt
+def submit_user_result(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'No autenticado'}, status=401)
+
+    data = _payload(request)
+    outcome = data.get('outcome')
+    best_victory = (data.get('best_victory') or '').strip()
+
+    if outcome not in {'win', 'loss', 'draw'}:
+        return JsonResponse({'status': 'error', 'message': 'Resultado inválido'}, status=400)
+
+    stats = request.user.stats
+    stats.games_played += 1
+    if outcome == 'win':
+        stats.wins += 1
+        stats.rating += 15
+        if best_victory:
+            stats.best_victory = best_victory[:120]
+    elif outcome == 'loss':
+        stats.losses += 1
+        stats.rating = max(800, stats.rating - 12)
+    else:
+        stats.draws += 1
+        stats.rating += 2
+
+    stats.save()
+
+    return JsonResponse({'status': 'ok', 'stats': _serialize_user(request.user)['stats']})
 
 def _gen_room_code(length=8):
     alphabet = string.ascii_uppercase + string.digits

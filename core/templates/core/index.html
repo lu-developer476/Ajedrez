@@ -144,6 +144,23 @@
         <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
         <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
       </div>
+      <div class="user-panel panel-glow">
+        <div class="leaderboard-header"><p class="eyebrow">USUARIOS</p><h2>Cuenta y perfil</h2></div>
+        <p id="auth-status">No autenticado</p>
+        <div class="auth-grid">
+          <input id="auth-username" class="command-input" type="text" placeholder="Usuario">
+          <input id="auth-email" class="command-input" type="email" placeholder="Email (registro)">
+          <input id="auth-password" class="command-input" type="password" placeholder="Contraseña">
+          <input id="avatar-url" class="command-input" type="url" placeholder="URL de avatar">
+        </div>
+        <div class="controls">
+          <button id="register-btn" class="btn secondary" type="button">Registro</button>
+          <button id="login-btn" class="btn secondary" type="button">Login</button>
+          <button id="logout-btn" class="btn danger" type="button">Salir</button>
+          <button id="save-profile-btn" class="btn primary" type="button">Guardar perfil</button>
+        </div>
+        <ul id="user-stats-list" class="move-history"></ul>
+      </div>
       <div class="leaderboard panel-glow">
         <div class="leaderboard-header"><p class="eyebrow">ONLINE</p><h2>Ranking</h2></div>
         <ol id="ranking-list" class="move-history"></ol>
