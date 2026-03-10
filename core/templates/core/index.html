@@ -39,7 +39,17 @@
           <label for="volume-slider" class="audio-label">Volumen</label>
           <input id="volume-slider" class="volume-slider" type="range" min="0" max="100" value="100" aria-label="Control de volumen">
         </article>
-        <button id="flip-board-btn" class="btn secondary stat-level-card" type="button">Mover tablero</button>
+        <div class="analysis panel-glow stat-level-card">
+          <div class="leaderboard-header"><p class="eyebrow">POST-PARTIDA</p><h2>Análisis tipo Chess.com</h2></div>
+          <p class="analysis-main">Accuracy: <strong id="analysis-accuracy">--%</strong></p>
+          <div class="analysis-grid">
+            <p>🟢 Best moves: <strong id="analysis-best">0</strong></p>
+            <p>🟡 Inaccuracies: <strong id="analysis-inaccuracy">0</strong></p>
+            <p>🟠 Mistakes: <strong id="analysis-mistake">0</strong></p>
+            <p>🔴 Blunders: <strong id="analysis-blunder">0</strong></p>
+          </div>
+          <p class="analysis-legend">Marcado en tablero: 🟢 Best move | 🟡 Inaccuracy | 🟠 Mistake | 🔴 Blunder</p>
+        </div>
       </div>
     </section>
 
@@ -69,6 +79,7 @@
               <ol id="move-history" class="move-history"></ol>
               <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
             </div>
+            <button id="flip-board-btn" class="btn secondary" type="button">Mover tablero</button>
           </aside>
         </div>
         <div class="coordinates coords-bottom" id="coords-bottom"></div>
@@ -151,6 +162,38 @@
         <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
         <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
       </div>
+      <div class="tips panel-glow">
+        <div class="variation-controls panel-inline">
+          <p><span>Repertorio:</span> <strong id="variations-summary">10/10 activas</strong></p>
+          <button id="open-variations-btn" class="btn secondary" type="button">Elegir jugadas activas</button>
+          <button id="toggle-all-variations-btn" class="btn secondary" type="button">Desactivar todas</button>
+          <button id="toggle-attacks-btn" class="btn secondary" type="button">Casillas atacadas: OFF</button>
+          <button id="toggle-promotion-animation-btn" class="btn secondary" type="button">Animación promoción: OFF</button>
+          <button id="toggle-check-animation-btn" class="btn secondary" type="button">Animación jaque: OFF</button>
+          <button id="toggle-last-move-animation-btn" class="btn secondary" type="button">Animación última jugada: OFF</button>
+          <button id="toggle-audio-btn" class="btn secondary" type="button">Audio: ON</button>
+        </div>
+        <p id="room-info"><span>Sala:</span> ---</p>
+      </div>
+      <div class="analysis panel-glow">
+        <div class="leaderboard-header"><p class="eyebrow">IA EXPLICATIVA</p><h2>Lectura de jugadas</h2></div>
+        <p id="ai-explanation-main" class="analysis-main">Todavía no hay jugadas para explicar.</p>
+        <ol id="ai-explanation-history" class="move-history ai-explanation-history"></ol>
+      </div>
+      <div class="analysis panel-glow">
+        <div class="leaderboard-header"><p class="eyebrow">RATING</p><h2>Sistema ELO</h2></div>
+        <p class="analysis-main">Jugador A: <strong id="elo-a-rating">1450</strong> | Jugador B: <strong id="elo-b-rating">1320</strong></p>
+        <div class="auth-grid">
+          <input id="elo-a-input" class="command-input" type="number" value="1450" placeholder="ELO Jugador A">
+          <input id="elo-b-input" class="command-input" type="number" value="1320" placeholder="ELO Jugador B">
+          <select id="elo-result" class="btn secondary" aria-label="Resultado de la partida">
+            <option value="a_win" selected>Resultado: Gana A</option>
+            <option value="draw">Resultado: Empate</option>
+            <option value="b_win">Resultado: Gana B</option>
+          </select>
+        </div>
+        <p id="elo-after" class="analysis-legend">Después de la partida: +0 | +0</p>
+      </div>
       <div class="user-panel panel-glow">
         <div class="leaderboard-header"><p class="eyebrow">USUARIOS</p><h2>Cuenta y perfil</h2></div>
         <p id="auth-status">No autenticado</p>
@@ -171,49 +214,6 @@
       <div class="leaderboard panel-glow">
         <div class="leaderboard-header"><p class="eyebrow">ONLINE</p><h2>Ranking</h2></div>
         <ol id="ranking-list" class="move-history"></ol>
-      </div>
-      <div class="tips panel-glow">
-        <div class="variation-controls panel-inline">
-          <p><span>Repertorio:</span> <strong id="variations-summary">10/10 activas</strong></p>
-          <button id="open-variations-btn" class="btn secondary" type="button">Elegir jugadas activas</button>
-          <button id="toggle-all-variations-btn" class="btn secondary" type="button">Desactivar todas</button>
-          <button id="toggle-attacks-btn" class="btn secondary" type="button">Casillas atacadas: OFF</button>
-          <button id="toggle-promotion-animation-btn" class="btn secondary" type="button">Animación promoción: OFF</button>
-          <button id="toggle-check-animation-btn" class="btn secondary" type="button">Animación jaque: OFF</button>
-          <button id="toggle-last-move-animation-btn" class="btn secondary" type="button">Animación última jugada: OFF</button>
-          <button id="toggle-audio-btn" class="btn secondary" type="button">Audio: ON</button>
-        </div>
-        <p id="room-info"><span>Sala:</span> ---</p>
-      </div>
-      <div class="analysis panel-glow">
-        <div class="leaderboard-header"><p class="eyebrow">POST-PARTIDA</p><h2>Análisis tipo Chess.com</h2></div>
-        <p class="analysis-main">Accuracy: <strong id="analysis-accuracy">--%</strong></p>
-        <div class="analysis-grid">
-          <p>🟢 Best moves: <strong id="analysis-best">0</strong></p>
-          <p>🟡 Inaccuracies: <strong id="analysis-inaccuracy">0</strong></p>
-          <p>🟠 Mistakes: <strong id="analysis-mistake">0</strong></p>
-          <p>🔴 Blunders: <strong id="analysis-blunder">0</strong></p>
-        </div>
-        <p class="analysis-legend">Marcado en tablero: 🟢 Best move | 🟡 Inaccuracy | 🟠 Mistake | 🔴 Blunder</p>
-      </div>
-      <div class="analysis panel-glow">
-        <div class="leaderboard-header"><p class="eyebrow">IA EXPLICATIVA</p><h2>Lectura de jugadas</h2></div>
-        <p id="ai-explanation-main" class="analysis-main">Todavía no hay jugadas para explicar.</p>
-        <ol id="ai-explanation-history" class="move-history ai-explanation-history"></ol>
-      </div>
-      <div class="analysis panel-glow">
-        <div class="leaderboard-header"><p class="eyebrow">RATING</p><h2>Sistema ELO</h2></div>
-        <p class="analysis-main">Jugador A: <strong id="elo-a-rating">1450</strong> | Jugador B: <strong id="elo-b-rating">1320</strong></p>
-        <div class="auth-grid">
-          <input id="elo-a-input" class="command-input" type="number" value="1450" placeholder="ELO Jugador A">
-          <input id="elo-b-input" class="command-input" type="number" value="1320" placeholder="ELO Jugador B">
-          <select id="elo-result" class="btn secondary" aria-label="Resultado de la partida">
-            <option value="a_win" selected>Resultado: Gana A</option>
-            <option value="draw">Resultado: Empate</option>
-            <option value="b_win">Resultado: Gana B</option>
-          </select>
-        </div>
-        <p id="elo-after" class="analysis-legend">Después de la partida: +0 | +0</p>
       </div>
     </section>
   </main>

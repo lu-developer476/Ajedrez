@@ -221,6 +221,7 @@ let enableLastMoveAnimation = false;
 let highlightLastMove = null;
 let activeVariations = new Set(TRAINING_VARIATIONS);
 let waitingStartColor = false;
+let playerColor = 'w';
 
 const ELO_K_FACTOR = 32;
 
@@ -1080,7 +1081,7 @@ function openConfigNotice(title, message) {
 async function resetMatchWithConfigNotice() {
   waitingStartColor = true;
   resetGame();
-  beginMatchFlow();
+  await beginMatchFlow();
 }
 
 function openPromotionSelector(color) {
@@ -1109,6 +1110,7 @@ function openPromotionSelector(color) {
 function clickSquare(row, col) {
   evaluateGameStatus();
   if (waitingStartColor || isPaused || state.status.includes('JAQUE MATE') || state.status.includes('TIEMPO AGOTADO')) return;
+  if (mode === 'ai' && state.turn !== playerColor) return;
   const piece = state.board[row][col];
   if (selected) {
     const chosen = legalMoves.find((m) => m.row === row && m.col === col);
@@ -1233,12 +1235,13 @@ async function makeMove(fr, fc, tr, tc, promotionChoice = null) {
   playMoveSound(Boolean(target), state.status);
   render();
   if (mode === 'online' && roomCode) await syncOnline();
-  if (mode === 'ai' && state.turn === 'b' && (state.status === 'EN CURSO' || state.status === 'JAQUE')) await playAi();
+  if (mode === 'ai' && state.turn !== playerColor && (state.status === 'EN CURSO' || state.status === 'JAQUE')) await playAi();
 }
 
 async function playAi() {
+  const aiColor = playerColor === 'w' ? 'b' : 'w';
   const fallbackMove = () => {
-    const legal = getAllLegalMovesForColor(state.board, 'b', state);
+    const legal = getAllLegalMovesForColor(state.board, aiColor, state);
     if (!legal.length) return null;
     return legal[Math.floor(Math.random() * legal.length)];
   };
@@ -1249,7 +1252,7 @@ async function playAi() {
     const res = await fetch('/api/ai-move/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ board: state.board, color: 'b', difficulty: aiLevel }),
+      body: JSON.stringify({ board: state.board, color: aiColor, difficulty: aiLevel }),
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
@@ -1336,6 +1339,7 @@ async function executeCoordinateMove() {
   const from = parseSquare(commandFromEl?.value || '');
   const to = parseSquare(commandToEl?.value || '');
   if (!from || !to || waitingStartColor) return;
+  if (mode === 'ai' && state.turn !== playerColor) return;
   const piece = state.board[from.row][from.col];
   if (!piece || piece[0] !== state.turn) return;
   const moves = getLegalMoves(state.board, from.row, from.col, state);
@@ -1352,10 +1356,30 @@ function setInitialBoardTurn() {
   state.moveNumber = 1;
 }
 
+function askPlayerColor() {
+  return new Promise((resolve) => {
+    const backdrop = openCyberModal({
+      title: 'Elegí tus piezas',
+      className: 'cyber-modal-centered',
+      body: '<p>Seleccioná con qué color de piezas querés jugar esta partida.</p>',
+      actions: `
+        <button type="button" class="btn secondary" data-color="w">Jugar con BLANCAS</button>
+        <button type="button" class="btn secondary" data-color="b">Jugar con NEGRAS</button>`,
+    });
+    backdrop.querySelectorAll('[data-color]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const color = btn.getAttribute('data-color') || 'w';
+        closeCyberModal();
+        resolve(color);
+      });
+    });
+  });
+}
+
 function askStartColor() {
   return openConfigNotice(
     'Regla oficial aplicada',
-    'En ajedrez, las BLANCAS siempre inician la partida. El juego arrancará automáticamente con BLANCAS.'
+    'En ajedrez, las BLANCAS siempre inician la partida.'
   ).then(() => 'w');
 }
 
@@ -1371,11 +1395,15 @@ function getAllLegalMovesForColor(board, color, context = state) {
 }
 
 async function beginMatchFlow() {
+  const chosenPlayerColor = await askPlayerColor();
+  playerColor = chosenPlayerColor || 'w';
+  flipped = playerColor === 'b';
   await askStartColor();
   setInitialBoardTurn();
   waitingStartColor = false;
   startTimerLoop();
   render();
+  if (mode === 'ai' && state.turn !== playerColor && (state.status === 'EN CURSO' || state.status === 'JAQUE')) await playAi();
 }
 
 modeSelectEl.onchange = () => {
