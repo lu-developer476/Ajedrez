@@ -88,6 +88,13 @@ const PIECE_NAMES = {
 
 
 const TRAINING_VARIATIONS = [
+  'mate en 1',
+  'mate en 2',
+  'mate en 3',
+  'mate en 4',
+  'mate en 5',
+  'ganar material',
+  'finales',
   'apertura italiana',
   'apertura siciliana',
   'apertura francesa',
@@ -127,6 +134,43 @@ const TUTORIAL_ITEMS = [
   { title: 'Táctica desviación', text: 'Forzás a una pieza rival a abandonar una casilla clave para luego explotar la debilidad.' },
   { title: 'Táctica rayos X', text: 'Una pieza ataca a través de otra alineada en la misma línea o diagonal para generar amenazas ocultas.' },
 ];
+
+let tutorialItems = [...TUTORIAL_ITEMS];
+
+function titleFromTrainingKey(key) {
+  const mapping = {
+    mate_in_1: 'Mate en 1',
+    mate_in_2: 'Mate en 2',
+    mate_in_3: 'Mate en 3',
+    mate_in_4: 'Mate en 4',
+    mate_in_5: 'Mate en 5',
+    win_material: 'Ganar material',
+    endgames: 'Finales',
+  };
+  return mapping[key] || key.replace(/_/g, ' ');
+}
+
+async function loadTrainingCatalog() {
+  try {
+    const res = await fetch('/api/plays/');
+    const data = await res.json();
+    if (data?.status !== 'ok') return;
+
+    const merged = [...TUTORIAL_ITEMS];
+    const trainingMode = data.training_mode || {};
+    Object.entries(trainingMode).forEach(([category, entries]) => {
+      if (!Array.isArray(entries) || !entries.length) return;
+      merged.push({
+        title: `Modo entrenamiento · ${titleFromTrainingKey(category)}`,
+        text: entries.join(' | '),
+      });
+    });
+
+    tutorialItems = merged;
+  } catch (err) {
+    tutorialItems = [...TUTORIAL_ITEMS];
+  }
+}
 
 const PIECE_SETS = {
   retro: {
@@ -486,7 +530,7 @@ async function openTutorialModal() {
   const backdrop = openCyberModal({
     title: 'Tutorial',
     className: 'cyber-modal-centered',
-    body: `<div class="tutorial-list">${TUTORIAL_ITEMS.map((item) => `<p><span>${item.title}:</span> ${item.text}</p>`).join('')}</div>`,
+    body: `<div class="tutorial-list">${tutorialItems.map((item) => `<p><span>${item.title}:</span> ${item.text}</p>`).join('')}</div>`,
     actions: '<button type="button" class="btn primary" data-act="ok">Entendido</button>',
   });
   backdrop.querySelector('[data-act="ok"]').onclick = () => closeCyberModal();
@@ -757,7 +801,13 @@ function render() {
   lastMoveEl.textContent = state.lastMove || '---';
   moveHistoryEl.innerHTML = state.history.length ? state.history.map((m) => `<li>${m}</li>`).join('') : '<li>Sin movimientos aún.</li>';
   renderAdvantageHistory();
-  modeLabelEl.textContent = mode === 'ai' ? `Jugador vs IA · Nivel ${aiLevel}` : mode === 'online' ? `Online (${roomCode || 'sin sala'})` : 'Local 1v1';
+  modeLabelEl.textContent = mode === 'ai'
+    ? `Jugador vs IA · Nivel ${aiLevel}`
+    : mode === 'online'
+      ? `Online (${roomCode || 'sin sala'})`
+      : mode === 'training'
+        ? 'Entrenamiento táctico'
+        : 'Local 1v1';
   renderClocks();
   if (aiLevelEl) aiLevelEl.style.display = mode === 'ai' ? 'block' : 'none';
   updateVariationUI();
@@ -1492,7 +1542,7 @@ if (timeControlHelpEl) timeControlHelpEl.textContent = getTimeControlDescription
 resetGame();
 loadRanking();
 loadProfile();
-
+loadTrainingCatalog();
 
 ['click', 'touchstart', 'keydown', 'pointerdown'].forEach((evt) => {
   document.addEventListener(evt, ensureAudioContext, { once: true });
