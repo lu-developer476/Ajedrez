@@ -898,8 +898,52 @@ body {
   max-height: 145px;
 }
 
+.advantage-history {
+  margin: 10px 0 12px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 148, 77, 0.22);
+  background: rgba(13, 8, 12, 0.45);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+}
+
+.advantage-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+.advantage-chip.white {
+  color: #1a0c13;
+  background: linear-gradient(135deg, #f7f4ef, #ffd8a5);
+}
+
+.advantage-chip.black {
+  color: #f5eff7;
+  background: linear-gradient(135deg, #52305f, #261328);
+}
+
+.advantage-divider {
+  color: var(--muted);
+}
+
+.advantage-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 
 .timer-panel {
+
   grid-column: 1 / -1;
   padding: 16px;
   display: grid;
