@@ -77,6 +77,24 @@ body {
   font-family: var(--font-main);
 }
 
+
+.game-shell {
+  text-align: center;
+}
+
+.game-shell p,
+.game-shell h1,
+.game-shell h2,
+.game-shell h3,
+.game-shell label,
+.game-shell small,
+.game-shell li,
+.game-shell .analysis-main,
+.game-shell .analysis-legend,
+.game-shell #auth-status {
+  text-align: center;
+}
+
 .panel-glow,
 .panel-inline {
   background: var(--panel);
@@ -726,6 +744,17 @@ body {
   justify-items: stretch;
 }
 
+.game-controls {
+  gap: 14px;
+}
+
+.game-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .btn {
   border: 0;
   border-radius: 18px;
@@ -762,6 +791,25 @@ body {
 
 .controls .btn {
   width: 100%;
+}
+
+.user-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.user-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.user-actions .btn {
+  min-height: 68px;
 }
 
 
@@ -861,6 +909,12 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  justify-items: center;
+}
+
+.cyber-modal-actions .btn {
+  width: 100%;
+  text-align: center;
 }
 
 
@@ -1111,6 +1165,7 @@ body {
 .footer-separator { color: rgba(255,255,255,0.25); }
 
 @media (max-width: 1120px) {
+  .game-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .board-main-row {
     flex-wrap: wrap;
     flex-direction: column;
@@ -1157,6 +1212,10 @@ body {
 }
 
 @media (max-width: 720px) {
+  .game-actions,
+  .user-actions {
+    grid-template-columns: 1fr;
+  }
   :root { --cell-size: min(10.7vw, 48px); }
   .footer {
     justify-content: center;
@@ -1215,4 +1274,29 @@ body {
 
 .ai-explanation-history li {
   line-height: 1.35;
+}
+
+@media (min-width: 1600px) {
+  .game-shell {
+    width: min(1700px, calc(100% - 64px));
+  }
+
+  .game-actions {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-shell {
+    width: min(100%, calc(100% - 12px));
+  }
+
+  .panel-glow,
+  .panel-inline {
+    border-radius: 18px;
+  }
 }

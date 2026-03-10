@@ -143,7 +143,7 @@
     </section>
 
     <section class="aux-panels">
-      <div class="controls panel-glow">
+      <div class="controls game-controls panel-glow">
         <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="training">Entrenamiento</option><option value="online">Online</option></select>
         <select id="time-control" class="btn secondary" aria-label="Control de tiempo">
           <option value="bullet">Bullet · 1+0</option>
@@ -159,12 +159,14 @@
           <option value="4">IA Nivel 4 · Profesional</option>
           <option value="5">IA Nivel 5 · Blackwall</option>
         </select>
-        <button id="open-tutorial-panel-btn" class="btn secondary" type="button">Tutorial</button>
-        <button id="new-game-btn" class="btn primary" type="button">Nueva partida</button>
-        <button id="pause-game-btn" class="btn secondary" type="button">Pausar</button>
-        <button id="restart-game-btn" class="btn danger" type="button">Reiniciar partida</button>
-        <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
-        <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
+        <div class="game-actions">
+          <button id="open-tutorial-panel-btn" class="btn secondary" type="button">Tutorial</button>
+          <button id="new-game-btn" class="btn primary" type="button">Nueva partida</button>
+          <button id="pause-game-btn" class="btn secondary" type="button">Pausar</button>
+          <button id="restart-game-btn" class="btn danger" type="button">Reiniciar partida</button>
+          <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
+          <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
+        </div>
       </div>
       <div class="tips panel-glow">
         <div class="variation-controls panel-inline">
@@ -204,7 +206,7 @@
           <input id="auth-password" class="command-input" type="password" placeholder="Contraseña">
           <input id="avatar-url" class="command-input" type="url" placeholder="URL de avatar">
         </div>
-        <div class="controls">
+        <div class="controls user-actions">
           <button id="register-btn" class="btn secondary" type="button">Registro</button>
           <button id="login-btn" class="btn secondary" type="button">Login</button>
           <button id="logout-btn" class="btn danger" type="button">Salir</button>
