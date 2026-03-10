@@ -15,6 +15,18 @@ from django.views.decorators.http import require_GET, require_http_methods
 from .models import MatchRecord, PlayerRating
 
 
+DEFAULT_ELO_K = 32
+
+
+def _expected_score(player_rating, opponent_rating):
+    return 1 / (1 + 10 ** ((opponent_rating - player_rating) / 400))
+
+
+def _elo_delta(player_rating, opponent_rating, score, k_factor=DEFAULT_ELO_K):
+    expected = _expected_score(player_rating, opponent_rating)
+    return round(k_factor * (score - expected))
+
+
 def index(request):
     return render(request, 'core/index.html')
 
@@ -132,23 +144,26 @@ def submit_user_result(request):
     data = _payload(request)
     outcome = data.get('outcome')
     best_victory = (data.get('best_victory') or '').strip()
+    opponent_rating = int(data.get('opponent_rating') or 1200)
 
     if outcome not in {'win', 'loss', 'draw'}:
         return JsonResponse({'status': 'error', 'message': 'Resultado inválido'}, status=400)
 
     stats = request.user.stats
     stats.games_played += 1
+    score = 0.5
     if outcome == 'win':
         stats.wins += 1
-        stats.rating += 15
+        score = 1
         if best_victory:
             stats.best_victory = best_victory[:120]
     elif outcome == 'loss':
         stats.losses += 1
-        stats.rating = max(800, stats.rating - 12)
+        score = 0
     else:
         stats.draws += 1
-        stats.rating += 2
+
+    stats.rating = max(800, stats.rating + _elo_delta(stats.rating, opponent_rating, score))
 
     stats.save()
 
@@ -476,22 +491,49 @@ def submit_result(request):
     data = _payload(request)
     name = (data.get('name') or '').strip()
     outcome = data.get('outcome')
+    opponent_name = (data.get('opponent_name') or '').strip()
+    opponent_rating = int(data.get('opponent_rating') or 1200)
     if not name or outcome not in {'win', 'loss', 'draw'}:
         return JsonResponse({'status': 'error', 'message': 'Datos inválidos'}, status=400)
 
     player, _ = PlayerRating.objects.get_or_create(name=name)
+    player_start_rating = player.rating
+    score = 0.5
     if outcome == 'win':
         player.wins += 1
-        player.rating += 15
+        score = 1
     elif outcome == 'loss':
         player.losses += 1
-        player.rating = max(800, player.rating - 12)
+        score = 0
     else:
         player.draws += 1
-        player.rating += 2
+
+    delta = _elo_delta(player_start_rating, opponent_rating, score)
+    player.rating = max(800, player_start_rating + delta)
     player.save()
 
-    return JsonResponse({'status': 'ok', 'rating': player.rating})
+    response = {'status': 'ok', 'rating': player.rating, 'delta': delta}
+
+    if opponent_name:
+        opponent, _ = PlayerRating.objects.get_or_create(name=opponent_name, defaults={'rating': opponent_rating})
+        opponent_start_rating = opponent.rating
+        opponent_score = 1 - score
+        opponent_delta = _elo_delta(opponent_start_rating, player_start_rating, opponent_score)
+        opponent.rating = max(800, opponent_start_rating + opponent_delta)
+        if outcome == 'win':
+            opponent.losses += 1
+        elif outcome == 'loss':
+            opponent.wins += 1
+        else:
+            opponent.draws += 1
+        opponent.save()
+        response['opponent'] = {
+            'name': opponent.name,
+            'rating': opponent.rating,
+            'delta': opponent_delta,
+        }
+
+    return JsonResponse(response)
 
 
 @require_GET
