@@ -56,6 +56,16 @@ const toggleAudioBtnEl = document.getElementById('toggle-audio-btn');
 const gameShellEl = document.querySelector('.game-shell');
 const lightCellDotEl = document.getElementById('light-cell-dot');
 const darkCellDotEl = document.getElementById('dark-cell-dot');
+const authStatusEl = document.getElementById('auth-status');
+const authUsernameEl = document.getElementById('auth-username');
+const authEmailEl = document.getElementById('auth-email');
+const authPasswordEl = document.getElementById('auth-password');
+const avatarUrlEl = document.getElementById('avatar-url');
+const registerBtn = document.getElementById('register-btn');
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const saveProfileBtn = document.getElementById('save-profile-btn');
+const userStatsListEl = document.getElementById('user-stats-list');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -1130,6 +1140,49 @@ async function loadRanking() {
   rankingListEl.innerHTML = (data.results || []).map((p) => `<li>${p.name}: ${p.rating} (${p.wins}W/${p.losses}L/${p.draws}D)</li>`).join('') || '<li>Sin ranking todavía.</li>';
 }
 
+
+let currentUser = null;
+
+function renderUserStats(user) {
+  if (!authStatusEl || !userStatsListEl) return;
+  if (!user) {
+    authStatusEl.textContent = 'No autenticado';
+    userStatsListEl.innerHTML = '<li>Iniciá sesión para ver estadísticas.</li>';
+    return;
+  }
+  authStatusEl.textContent = `Sesión activa: ${user.username}`;
+  if (avatarUrlEl && user.avatar_url) avatarUrlEl.value = user.avatar_url;
+  const stats = user.stats || {};
+  userStatsListEl.innerHTML = [
+    `Partidas jugadas: ${stats.games_played ?? 0}`,
+    `Victorias: ${stats.wins ?? 0}`,
+    `Derrotas: ${stats.losses ?? 0}`,
+    `Empates: ${stats.draws ?? 0}`,
+    `Rating: ${stats.rating ?? 1200}`,
+    `Mejor victoria: ${stats.best_victory || 'Sin registrar'}`,
+  ].map((item) => `<li>${item}</li>`).join('');
+}
+
+async function loadProfile() {
+  try {
+    const res = await fetch('/api/auth/profile/');
+    const data = await res.json();
+    currentUser = data.status === 'ok' ? data.user : null;
+  } catch (err) {
+    currentUser = null;
+  }
+  renderUserStats(currentUser);
+}
+
+async function authRequest(url, payload = {}) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
 async function syncOnline() {
   await fetch(`/api/match/${roomCode}/update/`, {
     method: 'POST',
@@ -1331,6 +1384,49 @@ if (toggleAudioBtnEl) {
   };
 }
 
+if (registerBtn) {
+  registerBtn.onclick = async () => {
+    const data = await authRequest('/api/auth/register/', {
+      username: authUsernameEl?.value || '',
+      email: authEmailEl?.value || '',
+      password: authPasswordEl?.value || '',
+    });
+    if (data.status === 'ok') {
+      currentUser = data.user;
+      renderUserStats(currentUser);
+    }
+  };
+}
+if (loginBtn) {
+  loginBtn.onclick = async () => {
+    const data = await authRequest('/api/auth/login/', {
+      username: authUsernameEl?.value || '',
+      password: authPasswordEl?.value || '',
+    });
+    if (data.status === 'ok') {
+      currentUser = data.user;
+      renderUserStats(currentUser);
+    }
+  };
+}
+if (logoutBtn) {
+  logoutBtn.onclick = async () => {
+    await authRequest('/api/auth/logout/');
+    currentUser = null;
+    renderUserStats(null);
+  };
+}
+if (saveProfileBtn) {
+  saveProfileBtn.onclick = async () => {
+    const data = await authRequest('/api/auth/profile/update/', {
+      avatar_url: avatarUrlEl?.value || '',
+    });
+    if (data.status === 'ok') {
+      currentUser = data.user;
+      renderUserStats(currentUser);
+    }
+  };
+}
 
 if (volumeSliderEl) {
   volumeSliderEl.oninput = () => {
@@ -1365,6 +1461,7 @@ updateVariationUI();
 updateBoardLegendDots();
 resetGame();
 loadRanking();
+loadProfile();
 
 
 ['click', 'touchstart', 'keydown', 'pointerdown'].forEach((evt) => {
