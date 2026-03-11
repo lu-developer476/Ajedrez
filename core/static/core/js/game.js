@@ -76,6 +76,7 @@ const eloResultEl = document.getElementById('elo-result');
 const eloARatingEl = document.getElementById('elo-a-rating');
 const eloBRatingEl = document.getElementById('elo-b-rating');
 const eloAfterEl = document.getElementById('elo-after');
+const eloLinkStatusEl = document.getElementById('elo-link-status');
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
@@ -852,7 +853,7 @@ function render() {
   whiteCapturesEl.textContent = state.captured.w.length;
   blackCapturesEl.textContent = state.captured.b.length;
   lastMoveEl.textContent = state.lastMove || '---';
-  moveHistoryEl.innerHTML = state.history.length ? state.history.map((m) => `<li>${m}</li>`).join('') : '<li>Sin movimientos aún.</li>';
+  moveHistoryEl.innerHTML = state.history.length ? state.history.map((m) => `<li>${m}</li>`).join('') : '<li class="empty-item">Sin movimientos aún.</li>';
   renderAdvantageHistory();
   modeLabelEl.textContent = mode === 'ai'
     ? `Jugador vs IA · Nivel ${aiLevel}`
@@ -1277,15 +1278,41 @@ async function loadRanking() {
 
 let currentUser = null;
 
+function getAuthenticatedRatingFallback() {
+  return currentUser?.stats?.rating ?? null;
+}
+
+function syncEloInputsWithCurrentUser() {
+  if (!eloAInputEl) return;
+  const rating = getAuthenticatedRatingFallback();
+  if (rating === null) return;
+  eloAInputEl.value = String(rating);
+}
+
+function renderEloLinkStatus() {
+  if (!eloLinkStatusEl) return;
+  if (!currentUser) {
+    eloLinkStatusEl.textContent = 'El simulador ELO es independiente hasta que inicies sesión.';
+    return;
+  }
+  const rating = currentUser?.stats?.rating ?? 1200;
+  eloLinkStatusEl.textContent = `ELO vinculado: Jugador A usa tu rating (${rating}) en sesión.`;
+}
+
 function renderUserStats(user) {
   if (!authStatusEl || !userStatsListEl) return;
   if (!user) {
     authStatusEl.textContent = 'No autenticado';
-    userStatsListEl.innerHTML = '<li>Iniciá sesión para ver estadísticas.</li>';
+    userStatsListEl.innerHTML = '<li class="empty-item">Iniciá sesión para ver estadísticas.</li>';
+    if (avatarUrlEl) avatarUrlEl.value = '';
+    renderEloLinkStatus();
+    renderEloPreview();
     return;
   }
-  authStatusEl.textContent = `Sesión activa: ${user.username}`;
-  if (avatarUrlEl && user.avatar_url) avatarUrlEl.value = user.avatar_url;
+  authStatusEl.textContent = `Sesión activa: ${user.username} (${user.email || 'sin email'})`;
+  if (avatarUrlEl) avatarUrlEl.value = user.avatar_url || '';
+  syncEloInputsWithCurrentUser();
+  renderEloLinkStatus();
   const stats = user.stats || {};
   userStatsListEl.innerHTML = [
     `Partidas jugadas: ${stats.games_played ?? 0}`,
@@ -1295,6 +1322,7 @@ function renderUserStats(user) {
     `Rating: ${stats.rating ?? 1200}`,
     `Mejor victoria: ${stats.best_victory || 'Sin registrar'}`,
   ].map((item) => `<li>${item}</li>`).join('');
+  renderEloPreview();
 }
 
 async function loadProfile() {
@@ -1306,6 +1334,53 @@ async function loadProfile() {
     currentUser = null;
   }
   renderUserStats(currentUser);
+}
+
+function normalizeAuthInputs() {
+  if (authUsernameEl) authUsernameEl.value = (authUsernameEl.value || '').trim().replace(/\s+/g, ' ');
+  if (authEmailEl) authEmailEl.value = (authEmailEl.value || '').trim().toLowerCase();
+  if (avatarUrlEl) avatarUrlEl.value = (avatarUrlEl.value || '').trim();
+}
+
+function clearAuthInputs({ keepUsername = true } = {}) {
+  if (!keepUsername && authUsernameEl) authUsernameEl.value = '';
+  if (authEmailEl) authEmailEl.value = '';
+  if (authPasswordEl) authPasswordEl.value = '';
+}
+
+function validateRegisterFields() {
+  const username = authUsernameEl?.value || '';
+  const email = authEmailEl?.value || '';
+  const password = authPasswordEl?.value || '';
+  if (username.length < 3) return 'El usuario debe tener al menos 3 caracteres.';
+  if (!email || !email.includes('@')) return 'Ingresá un email válido para registrarte.';
+  if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres.';
+  return '';
+}
+
+function validateLoginFields() {
+  const username = authUsernameEl?.value || '';
+  const password = authPasswordEl?.value || '';
+  if (!username) return 'Ingresá tu usuario.';
+  if (!password) return 'Ingresá tu contraseña.';
+  return '';
+}
+
+function validateAvatarUrl() {
+  const avatarUrl = avatarUrlEl?.value || '';
+  if (!avatarUrl) return '';
+  try {
+    const parsed = new URL(avatarUrl);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return 'La URL de avatar debe empezar con http o https.';
+    return '';
+  } catch (err) {
+    return 'La URL de avatar no es válida.';
+  }
+}
+
+function notifyAuthStatus(message) {
+  if (!authStatusEl) return;
+  authStatusEl.textContent = message;
 }
 
 async function authRequest(url, payload = {}) {
@@ -1553,6 +1628,12 @@ if (toggleAudioBtnEl) {
 
 if (registerBtn) {
   registerBtn.onclick = async () => {
+    normalizeAuthInputs();
+    const validationError = validateRegisterFields();
+    if (validationError) {
+      notifyAuthStatus(validationError);
+      return;
+    }
     const data = await authRequest('/api/auth/register/', {
       username: authUsernameEl?.value || '',
       email: authEmailEl?.value || '',
@@ -1560,38 +1641,67 @@ if (registerBtn) {
     });
     if (data.status === 'ok') {
       currentUser = data.user;
+      clearAuthInputs();
+      notifyAuthStatus(`Registro exitoso. Bienvenido/a ${data.user.username}.`);
       renderUserStats(currentUser);
+      return;
     }
+    notifyAuthStatus(data.message || 'No se pudo registrar el usuario.');
   };
 }
 if (loginBtn) {
   loginBtn.onclick = async () => {
+    normalizeAuthInputs();
+    const validationError = validateLoginFields();
+    if (validationError) {
+      notifyAuthStatus(validationError);
+      return;
+    }
     const data = await authRequest('/api/auth/login/', {
       username: authUsernameEl?.value || '',
       password: authPasswordEl?.value || '',
     });
     if (data.status === 'ok') {
       currentUser = data.user;
+      clearAuthInputs();
+      notifyAuthStatus(`Login exitoso. Sesión iniciada como ${data.user.username}.`);
       renderUserStats(currentUser);
+      return;
     }
+    notifyAuthStatus(data.message || 'Credenciales inválidas.');
   };
 }
 if (logoutBtn) {
   logoutBtn.onclick = async () => {
     await authRequest('/api/auth/logout/');
     currentUser = null;
+    clearAuthInputs({ keepUsername: false });
+    notifyAuthStatus('Sesión cerrada correctamente.');
     renderUserStats(null);
   };
 }
 if (saveProfileBtn) {
   saveProfileBtn.onclick = async () => {
+    normalizeAuthInputs();
+    if (!currentUser) {
+      notifyAuthStatus('Primero iniciá sesión para guardar perfil.');
+      return;
+    }
+    const avatarValidationError = validateAvatarUrl();
+    if (avatarValidationError) {
+      notifyAuthStatus(avatarValidationError);
+      return;
+    }
     const data = await authRequest('/api/auth/profile/update/', {
       avatar_url: avatarUrlEl?.value || '',
     });
     if (data.status === 'ok') {
       currentUser = data.user;
+      notifyAuthStatus('Perfil actualizado correctamente.');
       renderUserStats(currentUser);
+      return;
     }
+    notifyAuthStatus(data.message || 'No se pudo actualizar el perfil.');
   };
 }
 
