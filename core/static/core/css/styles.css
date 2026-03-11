@@ -1156,6 +1156,7 @@ body {
   align-items: center;
   gap: 10px;
   padding: 0 20px 22px;
+  font-family: 'Orbitron', sans-serif;
   font-size: 0.95rem;
   color: var(--muted);
   flex-wrap: wrap;
