@@ -21,6 +21,8 @@
   --font-title: 'Orbitron', sans-serif;
   --cell-size: min(9.8vw, 76px);
   --board-side: calc(var(--cell-size) * 8);
+  --coord-gutter: 24px;
+  --coord-gap: 10px;
 }
 
 * { box-sizing: border-box; }
@@ -344,17 +346,17 @@ body {
   display: grid;
   grid-template-columns: repeat(8, var(--cell-size));
   width: var(--board-side);
-  margin: 0 auto 8px 34px;
+  margin: 0 auto 8px calc(var(--coord-gutter) + var(--coord-gap));
   text-align: center;
 }
 
-.coords-bottom { margin: 8px auto 0 34px; }
+.coords-bottom { margin: 8px auto 0 calc(var(--coord-gutter) + var(--coord-gap)); }
 
 .coords-left, .coords-right {
   display: grid;
   grid-template-rows: repeat(8, var(--cell-size));
   align-items: center;
-  width: 24px;
+  width: var(--coord-gutter);
   text-align: center;
   padding-top: 0;
 }
@@ -1226,7 +1228,11 @@ body {
   .user-actions {
     grid-template-columns: 1fr;
   }
-  :root { --cell-size: min(10.7vw, 48px); }
+  :root {
+    --coord-gutter: 20px;
+    --coord-gap: 8px;
+    --cell-size: min(calc((100vw - 44px - (var(--coord-gutter) * 2) - (var(--coord-gap) * 2)) / 8), 46px);
+  }
   .footer {
     justify-content: center;
     text-align: center;
@@ -1236,9 +1242,23 @@ body {
   .game-shell { width: min(100%, calc(100% - 18px)); margin-top: 12px; }
   .arena, .controls, .audio-panel, .tips, .leaderboard, .brand-box, .stat-card { border-radius: 20px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
-  .coords-top, .coords-bottom { margin-left: 30px; }
+  .coordinates {
+    font-size: 0.8rem;
+  }
+  .coords-left,
+  .coords-right {
+    width: var(--coord-gutter);
+  }
   .piece { font-size: clamp(1.55rem, 7vw, 2.2rem); }
-  .footer { font-size: 0.86rem; }
+  .footer {
+    font-size: 0.86rem;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 18px;
+  }
+  .footer-separator {
+    display: none;
+  }
   .side-stack { min-width: 140px; grid-template-columns: 1fr; }
   .controls { grid-template-columns: 1fr; }
 }
@@ -1297,6 +1317,12 @@ body {
 }
 
 @media (max-width: 480px) {
+  :root {
+    --coord-gutter: 18px;
+    --coord-gap: 6px;
+    --cell-size: min(calc((100vw - 34px - (var(--coord-gutter) * 2) - (var(--coord-gap) * 2)) / 8), 42px);
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
