@@ -14,14 +14,44 @@
 </head>
 <body>
   <div class="noise"></div>
-  <main class="game-shell">
+  <nav class="site-navbar panel-glow" aria-label="Navegación principal">
+    <a class="nav-brand" href="#top">AJEDREZ<span>Zero West</span></a>
+    <div class="nav-dropdowns" aria-label="Accesos rápidos del sitio">
+      <details class="nav-menu">
+        <summary>Partida</summary>
+        <div class="nav-menu-list">
+          <a href="#tablero">Tablero</a>
+          <a href="#controles">Controles</a>
+          <a href="#historial">Historial</a>
+          <a href="#ranking">Ranking</a>
+        </div>
+      </details>
+      <details class="nav-menu">
+        <summary>Personalizar</summary>
+        <div class="nav-menu-list">
+          <a href="#apariencia">Apariencia</a>
+          <a href="#repertorio">Repertorio</a>
+          <a href="#analisis">Análisis</a>
+        </div>
+      </details>
+      <details class="nav-menu">
+        <summary>Cuenta</summary>
+        <div class="nav-menu-list">
+          <a href="#usuario">Perfil</a>
+          <a href="#audio">Audio</a>
+          <a href="#estado">Estado</a>
+        </div>
+      </details>
+    </div>
+  </nav>
+  <main id="top" class="game-shell">
     <section class="hud">
       <div class="brand-box panel-glow">
         <p class="eyebrow">ARCADE PROTOCOLS</p>
         <h1>AJEDREZ<span>ZERO WEST EDITION</span></h1>
         <p class="tagline">Duelos en tablero de neón con temporizador. ¡Demostrá quién es el mejor, choom!</p>
       </div>
-      <div class="stats-grid">
+      <div id="estado" class="stats-grid">
         <article class="stat-card panel-glow"><span class="stat-label">TURNO</span><strong id="turn-indicator">BLANCAS</strong></article>
         <article class="stat-card panel-glow"><span class="stat-label">ESTADO</span><strong id="status-text">EN CURSO</strong></article>
         <article class="stat-card panel-glow small"><span class="stat-label">JUGADA</span><strong id="move-counter">1</strong></article>
@@ -33,7 +63,7 @@
           <div class="timer-row"><span>BLANCAS</span><strong id="white-timer">10:00</strong></div>
           <div class="timer-row"><span>NEGRAS</span><strong id="black-timer">10:00</strong></div>
         </article>
-        <article class="audio-panel panel-glow stat-level-card" aria-label="Panel de sonido">
+        <article id="audio" class="audio-panel panel-glow stat-level-card" aria-label="Panel de sonido">
           <p class="eyebrow">Audio</p>
           <div class="audio-state" id="audio-state">🔊 Sonido activo (100%)</div>
           <label for="volume-slider" class="audio-label">Volumen</label>
@@ -53,7 +83,7 @@
       </div>
     </section>
 
-    <section class="arena panel-glow">
+    <section id="tablero" class="arena panel-glow">
       <div class="board-topbar">
         <div><h2>Tablero</h2></div>
         <div class="legend-inline"><span><i id="light-cell-dot" class="dot dot-light"></i>Casilla clara</span><span><i id="dark-cell-dot" class="dot dot-dark"></i>Casilla oscura</span></div>
@@ -73,14 +103,14 @@
               <input id="command-to" class="command-input" type="text" maxlength="2" placeholder="e4" autocomplete="off">
               <small>Enter ejecuta el movimiento</small>
             </div>
-            <div class="leaderboard panel-inline leaderboard-compact">
+            <div id="historial" class="leaderboard panel-inline leaderboard-compact">
               <div class="leaderboard-header"><p class="eyebrow">HISTORIAL</p><h2>Movimientos</h2></div>
               <div id="advantage-history" class="advantage-history" aria-label="Historial visual de ventaja"></div>
               <ol id="move-history" class="move-history"></ol>
               <button id="reset-view-btn" class="btn danger" type="button">Limpiar selección</button>
             </div>
             <button id="flip-board-btn" class="btn secondary" type="button">Mover tablero</button>
-            <div class="leaderboard panel-inline leaderboard-compact">
+            <div id="ranking" class="leaderboard panel-inline leaderboard-compact">
               <div class="leaderboard-header"><p class="eyebrow">ONLINE</p><h2>Ranking</h2></div>
               <ol id="ranking-list" class="move-history"></ol>
             </div>
@@ -93,7 +123,9 @@
         <div><span class="mini-label">Promoción manual</span><strong id="promotion-mode">Reina | Torre | Alfil | Caballo</strong></div>
         <div><span class="mini-label">Modo</span><strong id="mode-label">Local 1v1</strong></div>
       </div>
-      <div class="theme-selects panel-inline">
+      <details id="apariencia" class="theme-selects panel-inline disclosure-panel" open>
+        <summary>Apariencia del tablero</summary>
+        <div class="disclosure-content theme-select-grid">
         <select id="piece-theme" class="btn secondary" aria-label="Estilo de fichas">
           <option value="retro" selected>Fichas · Retro</option>
           <option value="humano">Fichas · Medieval</option>
@@ -139,11 +171,14 @@
           <option value="reduccion">Captura · Reducción</option>
           <option value="explosion">Captura · Explosión</option>
         </select>
-      </div>
+        </div>
+      </details>
     </section>
 
     <section class="aux-panels">
-      <div class="controls game-controls panel-glow">
+      <details id="controles" class="controls game-controls panel-glow disclosure-panel" open>
+        <summary>Controles de partida</summary>
+        <div class="disclosure-content controls-grid">
         <select id="mode-select" class="btn secondary"><option value="local">Local 1v1</option><option value="ai">Jugador vs IA</option><option value="training">Entrenamiento</option><option value="online">Online</option></select>
         <select id="time-control" class="btn secondary" aria-label="Control de tiempo">
           <option value="bullet">Bullet · 1+0</option>
@@ -167,8 +202,11 @@
           <button id="online-create-btn" class="btn secondary" type="button">Crear sala</button>
           <button id="online-join-btn" class="btn secondary" type="button">Unirse a sala</button>
         </div>
-      </div>
-      <div class="tips panel-glow">
+        </div>
+      </details>
+      <details id="repertorio" class="tips panel-glow disclosure-panel" open>
+        <summary>Repertorio y ayudas</summary>
+        <div class="disclosure-content">
         <div class="variation-controls panel-inline">
           <p><span>Repertorio:</span> <strong id="variations-summary">10/10 activas</strong></p>
           <button id="open-variations-btn" class="btn secondary" type="button">Elegir jugadas activas</button>
@@ -180,8 +218,11 @@
           <button id="toggle-audio-btn" class="btn secondary" type="button">Audio: ON</button>
         </div>
         <p id="room-info"><span>Sala:</span> ---</p>
-      </div>
-      <div class="analysis panel-glow">
+        </div>
+      </details>
+      <details id="analisis" class="analysis panel-glow disclosure-panel" open>
+        <summary>Análisis y ELO</summary>
+        <div class="disclosure-content">
         <div class="leaderboard-header"><p class="eyebrow">IA EXPLICATIVA + RATING</p><h2>Lectura de jugadas y sistema ELO</h2></div>
         <p id="elo-link-status" class="analysis-legend">El simulador ELO es independiente hasta que inicies sesión.</p>
         <p id="ai-explanation-main" class="analysis-main">Todavía no hay jugadas para explicar.</p>
@@ -197,8 +238,11 @@
           </select>
         </div>
         <p id="elo-after" class="analysis-legend">Después de la partida: +0 | +0</p>
-      </div>
-      <div class="user-panel panel-glow">
+        </div>
+      </details>
+      <details id="usuario" class="user-panel panel-glow disclosure-panel" open>
+        <summary>Cuenta y perfil</summary>
+        <div class="disclosure-content">
         <div class="leaderboard-header"><p class="eyebrow">USUARIOS</p><h2>Cuenta y perfil</h2></div>
         <p id="auth-status">No autenticado</p>
         <div class="auth-grid">
@@ -215,7 +259,8 @@
           <button id="save-profile-btn" class="btn primary" type="button">Guardar perfil</button>
         </div>
         <ul id="user-stats-list" class="move-history"></ul>
-      </div>
+        </div>
+      </details>
     </section>
   </main>
   <footer class="footer">

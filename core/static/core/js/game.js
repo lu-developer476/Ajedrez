@@ -1,3 +1,17 @@
+
+const navMenus = document.querySelectorAll('.site-navbar .nav-menu');
+navMenus.forEach((menu) => {
+  menu.addEventListener('toggle', () => {
+    if (!menu.open) return;
+    navMenus.forEach((otherMenu) => {
+      if (otherMenu !== menu) otherMenu.open = false;
+    });
+  });
+  menu.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => { menu.open = false; });
+  });
+});
+
 const boardEl = document.getElementById('board');
 const turnIndicatorEl = document.getElementById('turn-indicator');
 const statusTextEl = document.getElementById('status-text');
