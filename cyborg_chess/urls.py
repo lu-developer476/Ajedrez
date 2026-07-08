@@ -1,4 +1,3 @@
-from django.contrib import admin
 from django.urls import path
 
 from core.views import (
@@ -21,7 +20,6 @@ from core.views import (
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('', index, name='index'),
     path('health/', health, name='health'),
     path('api/ai-move/', ai_move, name='ai_move'),
