@@ -68,6 +68,13 @@ Además, la conexión a **Supabase Session Pooler** requiere:
 
 Sin ese parámetro, la conexión puede fallar aunque la URL parezca correcta. Sí, bastante traicionero.
 
+
+### Render: build vs runtime
+
+El build de Render no debe ejecutar migraciones contra Supabase: durante el build la conexión externa puede fallar o la variable `DATABASE_URL` puede apuntar a un pooler/proyecto incorrecto, provocando errores como `tenant/user ... not found` y cortando el deploy antes de iniciar la app.
+
+Este repo deja el build limitado a instalar dependencias y generar estáticos, y ejecuta `python manage.py migrate --no-input` en `start.sh` justo antes de levantar Gunicorn. Si el error persiste en runtime, revisar que `DATABASE_URL` tenga el project ref correcto de Supabase y `sslmode=require`.
+
 ---
 
 ## 🧠 Funciones agregadas

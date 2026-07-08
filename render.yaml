@@ -3,7 +3,7 @@ services:
     name: cyborg-chess-edition
     env: python
     buildCommand: "./build.sh"
-    startCommand: "gunicorn cyborg_chess.wsgi:application"
+    startCommand: "./start.sh"
     envVars:
       - key: DJANGO_SECRET_KEY
         generateValue: true
