@@ -4,18 +4,18 @@ import random
 import string
 from copy import deepcopy
 
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods
 
-from .models import MatchRecord, PlayerRating
-
 
 DEFAULT_ELO_K = 32
+IN_MEMORY_USERS = {}
+IN_MEMORY_RANKINGS = {}
+IN_MEMORY_MATCHES = {}
+NEXT_MATCH_ID = 1
 
 
 def _expected_score(player_rating, opponent_rating):
@@ -48,22 +48,35 @@ def _payload(request):
 
 
 
-def _serialize_user(user):
-    stats = user.stats
-    profile = user.profile
+def _default_stats():
     return {
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'avatar_url': profile.avatar_url,
-        'stats': {
-            'games_played': stats.games_played,
-            'wins': stats.wins,
-            'losses': stats.losses,
-            'draws': stats.draws,
-            'rating': stats.rating,
-            'best_victory': stats.best_victory,
-        }
+        'games_played': 0,
+        'wins': 0,
+        'losses': 0,
+        'draws': 0,
+        'rating': 1200,
+        'best_victory': 'Sin registrar',
+    }
+
+
+def _current_username(request):
+    return request.session.get('username')
+
+
+def _current_user(request):
+    username = _current_username(request)
+    if not username:
+        return None
+    return IN_MEMORY_USERS.get(username.lower())
+
+
+def _serialize_user(user):
+    return {
+        'id': user['id'],
+        'username': user['username'],
+        'email': user.get('email', ''),
+        'avatar_url': user.get('avatar_url', ''),
+        'stats': user['stats'],
     }
 
 
@@ -77,11 +90,20 @@ def register_user(request):
 
     if len(username) < 3 or len(password) < 6:
         return JsonResponse({'status': 'error', 'message': 'Usuario o contraseña inválidos'}, status=400)
-    if User.objects.filter(username__iexact=username).exists():
+    key = username.lower()
+    if key in IN_MEMORY_USERS:
         return JsonResponse({'status': 'error', 'message': 'El usuario ya existe'}, status=409)
 
-    user = User.objects.create_user(username=username, email=email, password=password)
-    login(request, user)
+    user = {
+        'id': len(IN_MEMORY_USERS) + 1,
+        'username': username,
+        'email': email,
+        'password': password,
+        'avatar_url': '',
+        'stats': _default_stats(),
+    }
+    IN_MEMORY_USERS[key] = user
+    request.session['username'] = username
     return JsonResponse({'status': 'ok', 'user': _serialize_user(user)}, status=201)
 
 
@@ -92,32 +114,36 @@ def login_user(request):
     username = (data.get('username') or '').strip()
     password = data.get('password') or ''
 
-    user = authenticate(request, username=username, password=password)
+    user = IN_MEMORY_USERS.get(username.lower())
+    if user and user.get('password') != password:
+        user = None
     if not user:
         return JsonResponse({'status': 'error', 'message': 'Credenciales inválidas'}, status=401)
 
-    login(request, user)
+    request.session['username'] = user['username']
     return JsonResponse({'status': 'ok', 'user': _serialize_user(user)})
 
 
 @require_http_methods(['POST'])
 @csrf_exempt
 def logout_user(request):
-    logout(request)
+    request.session.pop('username', None)
     return JsonResponse({'status': 'ok'})
 
 
 @require_GET
 def user_profile(request):
-    if not request.user.is_authenticated:
+    user = _current_user(request)
+    if not user:
         return JsonResponse({'status': 'error', 'message': 'No autenticado'}, status=401)
-    return JsonResponse({'status': 'ok', 'user': _serialize_user(request.user)})
+    return JsonResponse({'status': 'ok', 'user': _serialize_user(user)})
 
 
 @require_http_methods(['POST'])
 @csrf_exempt
 def update_user_profile(request):
-    if not request.user.is_authenticated:
+    user = _current_user(request)
+    if not user:
         return JsonResponse({'status': 'error', 'message': 'No autenticado'}, status=401)
 
     data = _payload(request)
@@ -125,20 +151,19 @@ def update_user_profile(request):
     best_victory = (data.get('best_victory') or '').strip()
 
     if avatar_url:
-        request.user.profile.avatar_url = avatar_url
-        request.user.profile.save(update_fields=['avatar_url'])
+        user['avatar_url'] = avatar_url
 
     if best_victory:
-        request.user.stats.best_victory = best_victory[:120]
-        request.user.stats.save(update_fields=['best_victory', 'updated_at'])
+        user['stats']['best_victory'] = best_victory[:120]
 
-    return JsonResponse({'status': 'ok', 'user': _serialize_user(request.user)})
+    return JsonResponse({'status': 'ok', 'user': _serialize_user(user)})
 
 
 @require_http_methods(['POST'])
 @csrf_exempt
 def submit_user_result(request):
-    if not request.user.is_authenticated:
+    user = _current_user(request)
+    if not user:
         return JsonResponse({'status': 'error', 'message': 'No autenticado'}, status=401)
 
     data = _payload(request)
@@ -149,25 +174,23 @@ def submit_user_result(request):
     if outcome not in {'win', 'loss', 'draw'}:
         return JsonResponse({'status': 'error', 'message': 'Resultado inválido'}, status=400)
 
-    stats = request.user.stats
-    stats.games_played += 1
+    stats = user['stats']
+    stats['games_played'] += 1
     score = 0.5
     if outcome == 'win':
-        stats.wins += 1
+        stats['wins'] += 1
         score = 1
         if best_victory:
-            stats.best_victory = best_victory[:120]
+            stats['best_victory'] = best_victory[:120]
     elif outcome == 'loss':
-        stats.losses += 1
+        stats['losses'] += 1
         score = 0
     else:
-        stats.draws += 1
+        stats['draws'] += 1
 
-    stats.rating = max(800, stats.rating + _elo_delta(stats.rating, opponent_rating, score))
+    stats['rating'] = max(800, stats['rating'] + _elo_delta(stats['rating'], opponent_rating, score))
 
-    stats.save()
-
-    return JsonResponse({'status': 'ok', 'stats': _serialize_user(request.user)['stats']})
+    return JsonResponse({'status': 'ok', 'stats': stats})
 
 def _gen_room_code(length=8):
     alphabet = string.ascii_uppercase + string.digits
@@ -496,40 +519,41 @@ def submit_result(request):
     if not name or outcome not in {'win', 'loss', 'draw'}:
         return JsonResponse({'status': 'error', 'message': 'Datos inválidos'}, status=400)
 
-    player, _ = PlayerRating.objects.get_or_create(name=name)
-    player_start_rating = player.rating
+    player = IN_MEMORY_RANKINGS.setdefault(name, {'name': name, 'rating': 1200, 'wins': 0, 'losses': 0, 'draws': 0})
+    player_start_rating = player['rating']
     score = 0.5
     if outcome == 'win':
-        player.wins += 1
+        player['wins'] += 1
         score = 1
     elif outcome == 'loss':
-        player.losses += 1
+        player['losses'] += 1
         score = 0
     else:
-        player.draws += 1
+        player['draws'] += 1
 
     delta = _elo_delta(player_start_rating, opponent_rating, score)
-    player.rating = max(800, player_start_rating + delta)
-    player.save()
+    player['rating'] = max(800, player_start_rating + delta)
 
-    response = {'status': 'ok', 'rating': player.rating, 'delta': delta}
+    response = {'status': 'ok', 'rating': player['rating'], 'delta': delta}
 
     if opponent_name:
-        opponent, _ = PlayerRating.objects.get_or_create(name=opponent_name, defaults={'rating': opponent_rating})
-        opponent_start_rating = opponent.rating
+        opponent = IN_MEMORY_RANKINGS.setdefault(
+            opponent_name,
+            {'name': opponent_name, 'rating': opponent_rating, 'wins': 0, 'losses': 0, 'draws': 0},
+        )
+        opponent_start_rating = opponent['rating']
         opponent_score = 1 - score
         opponent_delta = _elo_delta(opponent_start_rating, player_start_rating, opponent_score)
-        opponent.rating = max(800, opponent_start_rating + opponent_delta)
+        opponent['rating'] = max(800, opponent_start_rating + opponent_delta)
         if outcome == 'win':
-            opponent.losses += 1
+            opponent['losses'] += 1
         elif outcome == 'loss':
-            opponent.wins += 1
+            opponent['wins'] += 1
         else:
-            opponent.draws += 1
-        opponent.save()
+            opponent['draws'] += 1
         response['opponent'] = {
-            'name': opponent.name,
-            'rating': opponent.rating,
+            'name': opponent['name'],
+            'rating': opponent['rating'],
             'delta': opponent_delta,
         }
 
@@ -538,76 +562,79 @@ def submit_result(request):
 
 @require_GET
 def ranking(request):
-    rows = PlayerRating.objects.all()[:20]
+    rows = sorted(IN_MEMORY_RANKINGS.values(), key=lambda p: (-p['rating'], -p['wins']))[:20]
     return JsonResponse({
         'status': 'ok',
-        'results': [
-            {
-                'name': r.name,
-                'rating': r.rating,
-                'wins': r.wins,
-                'losses': r.losses,
-                'draws': r.draws,
-            }
-            for r in rows
-        ]
+        'results': rows,
     })
 
 
 @require_http_methods(['POST'])
 @csrf_exempt
 def create_online_match(request):
+    global NEXT_MATCH_ID
     data = _payload(request)
     room_code = _gen_room_code()
-    while MatchRecord.objects.filter(room_code=room_code).exists():
+    while room_code in IN_MEMORY_MATCHES:
         room_code = _gen_room_code()
 
-    match = MatchRecord.objects.create(
-        room_code=room_code,
-        white_player=(data.get('white_player') or 'White')[:30],
-        black_player='Waiting...',
-        mode='online',
-        game_state={'board': _initial_board(), 'turn': 'w', 'history': [], 'status': 'EN CURSO'},
-    )
-    return JsonResponse({'status': 'ok', 'room_code': match.room_code, 'match_id': match.id}, status=201)
+    match = {
+        'id': NEXT_MATCH_ID,
+        'room_code': room_code,
+        'white_player': (data.get('white_player') or 'White')[:30],
+        'black_player': 'Waiting...',
+        'result': 'in_progress',
+        'moves_count': 0,
+        'game_state': {'board': _initial_board(), 'turn': 'w', 'history': [], 'status': 'EN CURSO'},
+        'updated_at': now(),
+    }
+    NEXT_MATCH_ID += 1
+    IN_MEMORY_MATCHES[room_code] = match
+    return JsonResponse({'status': 'ok', 'room_code': room_code, 'match_id': match['id']}, status=201)
 
 
 @require_http_methods(['POST'])
 @csrf_exempt
 def join_online_match(request, room_code):
-    match = get_object_or_404(MatchRecord, room_code=room_code)
+    match = IN_MEMORY_MATCHES.get(room_code)
+    if not match:
+        return JsonResponse({'status': 'error', 'message': 'Sala no encontrada'}, status=404)
     data = _payload(request)
-    if match.black_player == 'Waiting...':
-        match.black_player = (data.get('player_name') or 'Black')[:30]
-        match.save(update_fields=['black_player', 'updated_at'])
-    return JsonResponse({'status': 'ok', 'room_code': room_code, 'black_player': match.black_player})
+    if match['black_player'] == 'Waiting...':
+        match['black_player'] = (data.get('player_name') or 'Black')[:30]
+        match['updated_at'] = now()
+    return JsonResponse({'status': 'ok', 'room_code': room_code, 'black_player': match['black_player']})
 
 
 @require_GET
 def get_online_match(request, room_code):
-    match = get_object_or_404(MatchRecord, room_code=room_code)
+    match = IN_MEMORY_MATCHES.get(room_code)
+    if not match:
+        return JsonResponse({'status': 'error', 'message': 'Sala no encontrada'}, status=404)
     return JsonResponse({
         'status': 'ok',
         'room_code': room_code,
-        'white_player': match.white_player,
-        'black_player': match.black_player,
-        'result': match.result,
-        'moves_count': match.moves_count,
-        'game_state': match.game_state,
-        'updated_at': match.updated_at.isoformat(),
+        'white_player': match['white_player'],
+        'black_player': match['black_player'],
+        'result': match['result'],
+        'moves_count': match['moves_count'],
+        'game_state': match['game_state'],
+        'updated_at': match['updated_at'].isoformat(),
     })
 
 
 @require_http_methods(['POST'])
 @csrf_exempt
 def update_online_match(request, room_code):
-    match = get_object_or_404(MatchRecord, room_code=room_code)
+    match = IN_MEMORY_MATCHES.get(room_code)
+    if not match:
+        return JsonResponse({'status': 'error', 'message': 'Sala no encontrada'}, status=404)
     data = _payload(request)
     game_state = data.get('game_state') or {}
-    match.game_state = game_state
-    match.moves_count = int(data.get('moves_count') or 0)
-    match.result = data.get('result') or 'in_progress'
-    match.save(update_fields=['game_state', 'moves_count', 'result', 'updated_at'])
+    match['game_state'] = game_state
+    match['moves_count'] = int(data.get('moves_count') or 0)
+    match['result'] = data.get('result') or 'in_progress'
+    match['updated_at'] = now()
     return JsonResponse({'status': 'ok'})
 
 

@@ -13,5 +13,3 @@ services:
         value: "cyborg-chess-edition.onrender.com"
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://cyborg-chess-edition.onrender.com"
-      - key: DATABASE_URL
-        sync: false

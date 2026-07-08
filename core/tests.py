@@ -1,10 +1,16 @@
-from django.test import TestCase
+from django.test import SimpleTestCase
 from django.urls import reverse
 
-from .models import MatchRecord, PlayerRating
+from . import views
 
 
-class ApiTests(TestCase):
+class ApiTests(SimpleTestCase):
+    def setUp(self):
+        views.IN_MEMORY_RANKINGS.clear()
+        views.IN_MEMORY_MATCHES.clear()
+        views.IN_MEMORY_USERS.clear()
+        views.NEXT_MATCH_ID = 1
+
     def test_ranking_empty(self):
         response = self.client.get(reverse('ranking'))
         self.assertEqual(response.status_code, 200)
@@ -17,11 +23,11 @@ class ApiTests(TestCase):
             content_type='application/json',
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(PlayerRating.objects.get(name='Player1').rating, 1216)
+        self.assertEqual(views.IN_MEMORY_RANKINGS['Player1']['rating'], 1216)
 
     def test_submit_result_updates_both_players_with_elo(self):
-        PlayerRating.objects.create(name='Jugador A', rating=1450)
-        PlayerRating.objects.create(name='Jugador B', rating=1320)
+        views.IN_MEMORY_RANKINGS['Jugador A'] = {'name': 'Jugador A', 'rating': 1450, 'wins': 0, 'losses': 0, 'draws': 0}
+        views.IN_MEMORY_RANKINGS['Jugador B'] = {'name': 'Jugador B', 'rating': 1320, 'wins': 0, 'losses': 0, 'draws': 0}
         response = self.client.post(
             reverse('submit_result'),
             data='{"name":"Jugador A","opponent_name":"Jugador B","opponent_rating":1320,"outcome":"win"}',
@@ -45,4 +51,4 @@ class ApiTests(TestCase):
         get_match = self.client.get(reverse('get_online_match', kwargs={'room_code': room}))
         self.assertEqual(get_match.status_code, 200)
         self.assertEqual(get_match.json()['white_player'], 'Ana')
-        self.assertEqual(MatchRecord.objects.count(), 1)
+        self.assertEqual(len(views.IN_MEMORY_MATCHES), 1)
