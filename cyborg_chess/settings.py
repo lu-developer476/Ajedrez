@@ -16,7 +16,8 @@ trusted_origins = os.getenv(
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in trusted_origins.split(',') if origin.strip()]
 
 INSTALLED_APPS = [
-    'django.contrib.sessions',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
@@ -50,10 +51,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'cyborg_chess.wsgi.application'
 
-# The app is intentionally database-free: gameplay state, rooms, ranking and
-# lightweight accounts are kept in process memory, and sessions are signed into
-# cookies. This avoids startup failures when no external database is available.
-DATABASES = {}
+# The app keeps gameplay state, rooms, rankings and lightweight accounts in
+# process memory, and sessions are signed into cookies. A local SQLite database
+# is still configured so standard Django management commands (notably
+# ``migrate`` on Render) can build and apply the historical migration graph
+# without requiring an external database service.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 AUTH_PASSWORD_VALIDATORS = []
