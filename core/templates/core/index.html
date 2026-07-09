@@ -15,31 +15,36 @@
 <body>
   <div class="noise"></div>
   <nav class="site-navbar panel-glow" aria-label="Navegación principal">
-    <a class="nav-brand" href="#top">AJEDREZ<span>Zero West</span></a>
+    <a class="nav-brand nav-brand-stacked" href="#top" aria-label="ARCADE PROTOCOLS AJEDREZ ZERO WEST EDITION">
+      <span class="nav-brand-kicker">ARCADE PROTOCOLS</span>
+      <strong>AJEDREZ</strong>
+      <span class="nav-brand-edition">ZERO WEST EDITION</span>
+      <span class="nav-brand-tagline">Duelos en tablero de neón con temporizador. ¡Demostrá quién es el mejor, choom!</span>
+    </a>
     <div class="nav-dropdowns" aria-label="Accesos rápidos del sitio">
       <details class="nav-menu">
         <summary>Partida</summary>
         <div class="nav-menu-list">
-          <a href="#tablero">Tablero</a>
-          <a href="#controles">Controles</a>
-          <a href="#historial">Historial</a>
-          <a href="#ranking">Ranking</a>
+          <button type="button" data-modal-target="tablero">Tablero</button>
+          <button type="button" data-modal-target="controles">Controles</button>
+          <button type="button" data-modal-target="historial">Historial</button>
+          <button type="button" data-modal-target="ranking">Ranking</button>
         </div>
       </details>
       <details class="nav-menu">
         <summary>Personalizar</summary>
         <div class="nav-menu-list">
-          <a href="#apariencia">Apariencia</a>
-          <a href="#repertorio">Repertorio</a>
-          <a href="#analisis">Análisis</a>
+          <button type="button" data-modal-target="apariencia">Apariencia</button>
+          <button type="button" data-modal-target="repertorio">Repertorio</button>
+          <button type="button" data-modal-target="analisis">Análisis</button>
         </div>
       </details>
       <details class="nav-menu">
         <summary>Cuenta</summary>
         <div class="nav-menu-list">
-          <a href="#usuario">Perfil</a>
-          <a href="#audio">Audio</a>
-          <a href="#estado">Estado</a>
+          <button type="button" data-modal-target="usuario">Perfil</button>
+          <button type="button" data-modal-target="audio">Audio</button>
+          <button type="button" data-modal-target="estado">Estado</button>
         </div>
       </details>
     </div>

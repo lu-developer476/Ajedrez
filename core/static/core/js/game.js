@@ -1,5 +1,43 @@
 
 const navMenus = document.querySelectorAll('.site-navbar .nav-menu');
+const sectionModalState = { element: null, placeholder: null, wasOpen: false };
+
+function restoreSectionModalContent() {
+  if (!sectionModalState.element || !sectionModalState.placeholder) return;
+  if (sectionModalState.element.tagName === 'DETAILS') sectionModalState.element.open = sectionModalState.wasOpen;
+  sectionModalState.placeholder.replaceWith(sectionModalState.element);
+  sectionModalState.element.classList.remove('section-modal-content');
+  sectionModalState.element = null;
+  sectionModalState.placeholder = null;
+}
+
+function closeSectionModal() {
+  closeCyberModal();
+}
+
+function openSectionModal(targetId) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const title = target.querySelector('summary, h2, .eyebrow')?.textContent?.trim() || targetId;
+  const backdrop = openCyberModal({
+    title,
+    className: 'cyber-modal-centered nav-section-modal',
+    body: '<div class="section-modal-slot"></div>',
+    actions: '<button type="button" class="btn primary" data-act="close">Cerrar</button>',
+  });
+  const placeholder = document.createComment(`modal-placeholder-${targetId}`);
+  sectionModalState.element = target;
+  sectionModalState.placeholder = placeholder;
+  sectionModalState.wasOpen = target.tagName === 'DETAILS' ? target.open : false;
+  target.replaceWith(placeholder);
+  target.classList.add('section-modal-content');
+  if (target.tagName === 'DETAILS') target.open = true;
+  backdrop.querySelector('.section-modal-slot').appendChild(target);
+  backdrop.querySelector('[data-act="close"]').onclick = closeSectionModal;
+  backdrop.addEventListener('click', (ev) => { if (ev.target === backdrop) closeSectionModal(); });
+}
+
+
 navMenus.forEach((menu) => {
   menu.addEventListener('toggle', () => {
     if (!menu.open) return;
@@ -7,8 +45,11 @@ navMenus.forEach((menu) => {
       if (otherMenu !== menu) otherMenu.open = false;
     });
   });
-  menu.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', () => { menu.open = false; });
+  menu.querySelectorAll('[data-modal-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      menu.open = false;
+      openSectionModal(button.dataset.modalTarget);
+    });
   });
 });
 
@@ -1024,6 +1065,7 @@ function hasAny(board, color, context = {}) {
 function closeCyberModal() {
   const backdrop = document.querySelector('.cyber-modal-backdrop');
   if (backdrop) backdrop.remove();
+  restoreSectionModalContent();
 }
 
 function openCyberModal({ title, body = '', actions = '', className = '' }) {
