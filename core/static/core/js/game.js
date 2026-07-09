@@ -51,6 +51,12 @@ navMenus.forEach((menu) => {
       openSectionModal(button.dataset.modalTarget);
     });
   });
+  menu.querySelectorAll('[data-scroll-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      menu.open = false;
+      document.getElementById(button.dataset.scrollTarget)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
 });
 
 const boardEl = document.getElementById('board');
