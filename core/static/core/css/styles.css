@@ -284,6 +284,9 @@ body {
 
 .board-wrap {
   position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
   background: linear-gradient(145deg, rgba(17, 10, 14, 0.98), rgba(26, 10, 16, 0.98));
   border: 1px solid rgba(255, 148, 77, 0.38);
   border-radius: 8px;
@@ -301,7 +304,16 @@ body {
   opacity: 0.34;
 }
 
-.board-main-row { display: flex; align-items: flex-start; gap: 10px; flex-wrap: nowrap; }
+.board-main-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--coord-gap);
+  flex-wrap: nowrap;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
 
 .side-stack {
   min-width: 220px;
@@ -361,11 +373,11 @@ body {
   display: grid;
   grid-template-columns: repeat(8, var(--cell-size));
   width: var(--board-side);
-  margin: 0 auto 8px calc(var(--coord-gutter) + var(--coord-gap));
+  margin: 0 calc(var(--coord-gutter) + var(--coord-gap)) 8px;
   text-align: center;
 }
 
-.coords-bottom { margin: 8px auto 0 calc(var(--coord-gutter) + var(--coord-gap)); }
+.coords-bottom { margin: 8px calc(var(--coord-gutter) + var(--coord-gap)) 0; }
 
 .coords-left, .coords-right {
   display: grid;
@@ -1255,6 +1267,8 @@ body {
     padding-right: 12px;
   }
   .game-shell { width: min(100%, calc(100% - 18px)); margin-top: 12px; }
+  .arena { padding: 12px; }
+  .board-wrap { padding: 8px; }
   .arena, .controls, .audio-panel, .tips, .leaderboard, .brand-box, .stat-card { border-radius: 20px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .coordinates {
@@ -1345,6 +1359,9 @@ body {
   .game-shell {
     width: min(100%, calc(100% - 12px));
   }
+
+  .arena { padding: 10px; }
+  .board-wrap { padding: 6px; }
 
   .panel-glow,
   .panel-inline {
