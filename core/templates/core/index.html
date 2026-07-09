@@ -25,7 +25,7 @@
       <details class="nav-menu">
         <summary>Partida</summary>
         <div class="nav-menu-list">
-          <button type="button" data-modal-target="tablero" class="board-legend-button"><span>Tablero</span><span>Casilla clara</span><span>Casilla oscura</span></button>
+          <button type="button" data-scroll-target="tablero">Tablero</button>
           <button type="button" data-modal-target="controles">Controles</button>
           <button type="button" data-modal-target="historial">Historial</button>
           <button type="button" data-modal-target="ranking">Ranking</button>
@@ -90,8 +90,10 @@
 
     <section id="tablero" class="arena panel-glow">
       <div class="board-topbar">
-        <div><h2>Tablero</h2></div>
-        <div class="legend-inline"><span><i id="light-cell-dot" class="dot dot-light"></i>Casilla clara</span><span><i id="dark-cell-dot" class="dot dot-dark"></i>Casilla oscura</span></div>
+        <div class="board-title-group">
+          <h2>Tablero</h2>
+          <div class="legend-inline"><span><i id="light-cell-dot" class="dot dot-light"></i>Casilla clara</span><span><i id="dark-cell-dot" class="dot dot-dark"></i>Casilla oscura</span></div>
+        </div>
       </div>
       <div class="board-wrap">
         <div class="coordinates coords-top" id="coords-top"></div>
