@@ -1514,3 +1514,111 @@ html {
     right: 0;
   }
 }
+
+/* Focused play layout: keep the page on the board plus the compact HUD. */
+.brand-box,
+.audio-panel,
+.stats-grid > .analysis,
+.aux-panels,
+#apariencia,
+.board-info,
+.side-stack {
+  display: none;
+}
+
+.game-shell {
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  grid-template-areas: "left main";
+}
+
+.nav-brand-stacked {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 3px;
+  white-space: normal;
+  line-height: 1;
+  max-width: min(520px, 55vw);
+}
+
+.nav-brand-stacked strong {
+  color: #fff;
+  font-size: clamp(1.1rem, 2vw, 1.75rem);
+  letter-spacing: 0.12em;
+}
+
+.nav-brand-stacked .nav-brand-kicker,
+.nav-brand-stacked .nav-brand-edition {
+  color: var(--accent-2);
+  font-size: 0.78rem;
+  letter-spacing: 0.32em;
+}
+
+.nav-brand-stacked .nav-brand-tagline {
+  color: var(--muted);
+  font-family: var(--font-main);
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+.nav-menu-list button {
+  width: 100%;
+  border: 0;
+  color: var(--text);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  padding: 9px 10px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.nav-menu-list button:hover,
+.nav-menu-list button:focus-visible {
+  background: rgba(255, 148, 77, 0.16);
+  outline: none;
+}
+
+.nav-section-modal {
+  width: min(760px, 100%);
+}
+
+.nav-section-modal .section-modal-slot {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.cyber-modal .section-modal-content,
+.cyber-modal .section-modal-content.audio-panel,
+.cyber-modal .section-modal-content.analysis,
+.cyber-modal .section-modal-content.leaderboard,
+.cyber-modal .section-modal-content#apariencia,
+.cyber-modal .section-modal-content#estado {
+  display: block;
+}
+
+.cyber-modal #estado.section-modal-content {
+  display: grid;
+}
+
+.cyber-modal .section-modal-content > summary {
+  pointer-events: none;
+}
+
+@media (max-width: 1120px) {
+  .game-shell {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "left"
+      "main";
+  }
+
+  .nav-brand-stacked {
+    max-width: 100%;
+    align-items: center;
+    text-align: center;
+  }
+}
