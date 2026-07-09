@@ -247,19 +247,27 @@ body {
 }
 
 .board-title-group {
-  display: grid;
-  gap: 2px;
-  justify-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
 }
 
 .board-title-group h2 {
-  margin-bottom: 0;
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 2rem);
 }
 
 .legend-inline {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
   color: var(--muted);
+  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+  font-weight: 600;
 }
 
 .dot {
@@ -1346,7 +1354,7 @@ body {
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 104px;
+  scroll-padding-top: 96px;
 }
 
 .site-navbar {
@@ -1356,10 +1364,10 @@ html {
   width: min(1400px, calc(100% - 32px));
   margin: 8px auto 0;
   padding: 8px 14px;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  gap: 18px;
 }
 
 .nav-brand {
@@ -1490,7 +1498,7 @@ html {
 @media (max-width: 1120px) {
   .site-navbar {
     align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .nav-brand,
@@ -1539,34 +1547,51 @@ html {
 }
 
 .nav-brand-stacked {
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 3px;
+  display: grid;
+  grid-template-columns: auto auto minmax(13rem, 1fr);
+  grid-template-areas:
+    "kicker title tagline"
+    "edition title tagline";
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 2px;
   white-space: normal;
   line-height: 1;
-  max-width: min(520px, 55vw);
+  max-width: none;
+  min-width: 0;
 }
 
 .nav-brand-stacked strong {
+  grid-area: title;
   color: #fff;
-  font-size: clamp(1.1rem, 2vw, 1.75rem);
+  font-size: clamp(1.25rem, 2.2vw, 2rem);
   letter-spacing: 0.12em;
+}
+
+.nav-brand-stacked .nav-brand-kicker {
+  grid-area: kicker;
+}
+
+.nav-brand-stacked .nav-brand-edition {
+  grid-area: edition;
 }
 
 .nav-brand-stacked .nav-brand-kicker,
 .nav-brand-stacked .nav-brand-edition {
   color: var(--accent-2);
-  font-size: 0.78rem;
+  font-size: clamp(0.68rem, 0.9vw, 0.8rem);
   letter-spacing: 0.32em;
 }
 
 .nav-brand-stacked .nav-brand-tagline {
+  grid-area: tagline;
   color: var(--muted);
   font-family: var(--font-main);
-  font-size: 0.86rem;
+  font-size: clamp(0.82rem, 1.05vw, 0.98rem);
   font-weight: 600;
   letter-spacing: 0.02em;
-  line-height: 1.2;
+  line-height: 1.12;
+  min-width: 0;
   text-transform: none;
 }
 
@@ -1624,6 +1649,12 @@ html {
   }
 
   .nav-brand-stacked {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "kicker"
+      "title"
+      "edition"
+      "tagline";
     max-width: 100%;
     align-items: center;
     text-align: center;
