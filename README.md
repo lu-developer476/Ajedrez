@@ -1,15 +1,31 @@
 # Ajedrez Zero West Edition
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Django](https://img.shields.io/badge/Django-5.2-092E20?style=for-the-badge&logo=django&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.x-092E20?style=for-the-badge&logo=django&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E?style=for-the-badge&logo=postgresql&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-Ne%C3%B3n-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-Local-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![WhiteNoise](https://img.shields.io/badge/Static-WhiteNoise-ffffff?style=for-the-badge&logo=django&logoColor=092E20)
+![Gunicorn](https://img.shields.io/badge/WSGI-Gunicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white)
 ![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)
-![Stockfish](https://img.shields.io/badge/IA-Stockfish-111111?style=for-the-badge)
 
-Proyecto de ajedrez desarrollado con **Django + JavaScript vanilla**, pensado para ofrecer partidas locales, enfrentamientos contra IA, multijugador online por salas y persistencia de partidas en base de datos.
+**Ajedrez Zero West Edition** es una aplicación web de ajedrez con estética arcade/cyberpunk, construida con **Django** en el backend y **JavaScript vanilla** en el frontend. El proyecto actualmente está orientado a correr sin servicios externos obligatorios: partidas, salas, usuarios livianos y rankings se mantienen en memoria del proceso, mientras que Django usa sesiones firmadas en cookies y una base **SQLite local** para comandos administrativos y migraciones históricas.
 
-Combina una interfaz ligera con una base backend sólida para soportar lógica de juego, ranking y despliegue en producción con **Render + Supabase**.
+---
+
+## 📌 Estado actual del proyecto
+
+El proyecto se encuentra en una versión funcional de aplicación web monolítica:
+
+- ✅ Interfaz principal renderizada con Django templates.
+- ✅ Tablero interactivo con piezas, coordenadas, historial, capturas, timers y paneles de ayuda.
+- ✅ Modos de juego local, entrenamiento, jugador vs IA y online por sala.
+- ✅ API HTTP para IA, ranking, autenticación liviana, perfil, resultados y partidas online.
+- ✅ Deploy preparado para Render con `build.sh`, `start.sh`, WhiteNoise y Gunicorn.
+- ✅ Funcionamiento sin PostgreSQL/Supabase obligatorio en runtime.
+- ⚠️ Los datos de usuarios, rankings y partidas online son **volátiles**: se guardan en memoria y se pierden al reiniciar el proceso.
+- ⚠️ Las migraciones históricas permanecen en el repositorio, pero el runtime no usa modelos de base de datos para la lógica principal.
+- ⚠️ `STOCKFISH_BINARY` está contemplado como variable futura/opcional, aunque la implementación actual usa el motor fallback propio.
 
 ---
 
@@ -17,102 +33,95 @@ Combina una interfaz ligera con una base backend sólida para soportar lógica d
 
 ### ♟ Jugabilidad
 
-- Modo **Jugador vs Jugador**
-- Modo **Jugador vs IA**
-- **Multijugador online** por salas
-- **Promoción manual** de peón en el cliente
-- Soporte para jugadas especiales y tácticas
-- Persistencia del estado de la partida
+- Modo **Jugador vs Jugador** local.
+- Modo **Jugador vs IA** con niveles de dificultad.
+- Modo **Entrenamiento** con repertorio de jugadas, tácticas y patrones.
+- Modo **Online** por salas con código de invitación.
+- Promoción manual de peón desde el cliente.
+- Historial de movimientos, capturas, selección, último movimiento y estado de la partida.
+- Temporizadores configurables: Bullet, Blitz, Rapid y Classical.
+- Personalización visual de tablero, piezas, colores, tipografías, coordenadas y animaciones.
 
 ### 🤖 Inteligencia artificial
 
-- Integración con **Stockfish**
-- Motor de respaldo si Stockfish no está configurado
-- Endpoint backend para calcular movimientos de IA
+- Endpoint `/api/ai-move/` para solicitar movimientos de IA.
+- Motor fallback propio con generación de jugadas legales, evaluación material/posicional y búsqueda minimax con poda alfa-beta.
+- Dificultad configurable del nivel 1 al 5.
 
-### 🌐 Multiplayer online
+### 🌐 Multijugador online
 
-- Creación y unión a salas
-- Sincronización de partidas por **polling**
-- Actualización del estado de la partida en tiempo real
+- Creación de sala con código aleatorio.
+- Unión a sala existente.
+- Consulta y actualización del estado de partida mediante API HTTP.
+- Sincronización pensada para polling desde el cliente.
+- Estado online guardado en memoria del proceso.
 
-### 🏆 Ranking
+### 👤 Usuarios y ranking
 
-- Ranking online con rating
-- Actualización de resultados
-- Persistencia de estadísticas
+- Registro, login, logout y perfil liviano mediante endpoints JSON.
+- Sesión guardada con cookies firmadas de Django.
+- Estadísticas por usuario: partidas, victorias, derrotas, tablas, rating y mejor victoria.
+- Ranking global en memoria con rating tipo Elo y actualización de resultados.
 
-### 💾 Persistencia
+### 🎨 Frontend
 
-- Guardado de partidas en base de datos
-- Estado serializado en:
-
-```python
-MatchRecord.game_state
-```
-
----
-
-## 🔧 Corrección aplicada para Render
-
-Se ajustó la configuración para evitar el clásico **Error 400 Bad Request** en producción:
-
-- `DJANGO_ALLOWED_HOSTS` incluye `.onrender.com`
-- `CSRF_TRUSTED_ORIGINS` incluye `https://*.onrender.com`
-
-Además, la conexión a **Supabase Session Pooler** requiere:
-
-```env
-?sslmode=require
-```
-
-Sin ese parámetro, la conexión puede fallar aunque la URL parezca correcta. Sí, bastante traicionero.
-
-
-### Render: build vs runtime
-
-El build de Render no debe ejecutar migraciones contra Supabase: durante el build la conexión externa puede fallar o la variable `DATABASE_URL` puede apuntar a un pooler/proyecto incorrecto, provocando errores como `tenant/user ... not found` y cortando el deploy antes de iniciar la app.
-
-Este repo deja el build limitado a instalar dependencias y generar estáticos, y ejecuta `python manage.py migrate --no-input` en `start.sh` justo antes de levantar Gunicorn. Si el error persiste en runtime, revisar que `DATABASE_URL` tenga el project ref correcto de Supabase y `sslmode=require`.
-
----
-
-## 🧠 Funciones agregadas
-
-- ♟ modo jugador vs IA
-- ♟ integración de motor **Stockfish** con fallback si no está configurado
-- ♟ ranking online con rating
-- ♟ multiplayer en tiempo real por sala mediante polling
-- ♟ endpoint de jugadas de ajedrez (mates rápidos, aperturas, movimientos especiales y tácticos)
-- ♟ promoción manual en el cliente
-- ♟ persistencia de partidas en DB (`MatchRecord.game_state`)
+- HTML server-rendered con template Django.
+- JavaScript vanilla para la lógica de juego e interacción.
+- CSS personalizado con estética neón/arcade.
+- Fuentes externas de Google Fonts: Cinzel, Orbitron y Rajdhani.
 
 ---
 
 ## 🔌 Endpoints API
 
 | Endpoint | Método | Descripción |
-|---|---|---|
+|---|---:|---|
+| `/health/` | `GET` | Healthcheck básico de la aplicación |
 | `/api/ai-move/` | `POST` | Solicita un movimiento de la IA |
-| `/api/ranking/` | `GET` | Obtiene el ranking global |
-| `/api/submit-result/` | `POST` | Envía el resultado de una partida |
-| `/api/plays/` | `GET` | Recupera jugadas, tácticas y aperturas |
-| `/api/match/create/` | `POST` | Crea una sala multijugador |
+| `/api/ranking/` | `GET` | Obtiene el ranking global en memoria |
+| `/api/submit-result/` | `POST` | Envía resultado a ranking global |
+| `/api/plays/` | `GET` | Recupera aperturas, tácticas, patrones y ayudas |
+| `/api/auth/register/` | `POST` | Registra usuario liviano en memoria |
+| `/api/auth/login/` | `POST` | Inicia sesión |
+| `/api/auth/logout/` | `POST` | Cierra sesión |
+| `/api/auth/profile/` | `GET` | Consulta perfil de usuario autenticado |
+| `/api/auth/profile/update/` | `POST` | Actualiza avatar o mejor victoria |
+| `/api/auth/submit-result/` | `POST` | Actualiza estadísticas del usuario autenticado |
+| `/api/match/create/` | `POST` | Crea sala multijugador |
 | `/api/match/<room_code>/join/` | `POST` | Se une a una sala |
-| `/api/match/<room_code>/` | `GET` | Consulta el estado actual de la partida |
-| `/api/match/<room_code>/update/` | `POST` | Actualiza el estado de la partida |
+| `/api/match/<room_code>/` | `GET` | Consulta estado actual de una sala |
+| `/api/match/<room_code>/update/` | `POST` | Actualiza estado de una sala |
 
 ---
 
-## ⚙ Configuración opcional de Stockfish
+## 🧱 Stack tecnológico
 
-Si Stockfish está disponible en el sistema:
+| Capa | Tecnología |
+|---|---|
+| Backend | Django 5.x |
+| Lenguaje backend | Python 3.11+ |
+| Frontend | HTML, CSS3 y JavaScript vanilla |
+| Templates | Django Templates |
+| Estado runtime | Memoria del proceso |
+| Sesiones | Cookies firmadas de Django |
+| Base local administrativa | SQLite |
+| Archivos estáticos | WhiteNoise |
+| Servidor WSGI | Gunicorn |
+| Deploy | Render |
+
+---
+
+## ⚙️ Variables de entorno
 
 ```env
+DJANGO_SECRET_KEY=tu_clave_secreta
+DJANGO_DEBUG=False
+DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost,.onrender.com
+CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000,http://localhost:8000,https://*.onrender.com
 STOCKFISH_BINARY=/usr/games/stockfish
 ```
 
-Si no está definido, la IA utiliza un motor fallback con una jugada legal aleatoria.
+> Nota: `STOCKFISH_BINARY` queda documentada como variable opcional/futura. En el estado actual, si no hay integración efectiva con Stockfish, la IA responde con el motor fallback interno.
 
 ---
 
@@ -144,7 +153,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Aplicar migraciones
+### 4. Aplicar migraciones locales
 
 ```bash
 python manage.py migrate
@@ -156,41 +165,48 @@ python manage.py migrate
 python manage.py runserver
 ```
 
----
-
-## 🧱 Stack tecnológico
-
-| Capa | Tecnología |
-|---|---|
-| Backend | Django |
-| Lenguaje principal | Python |
-| Frontend | JavaScript Vanilla |
-| Base de datos | PostgreSQL (Supabase) |
-| Deploy | Render |
-| Motor de ajedrez | Stockfish |
+La aplicación queda disponible en `http://127.0.0.1:8000/`.
 
 ---
 
-## 📦 Variables de entorno principales
+## 🚢 Deploy en Render
+
+El repositorio incluye configuración para Render:
+
+- `render.yaml` define el servicio web Python, el build command y el start command.
+- `build.sh` instala dependencias y ejecuta `collectstatic`.
+- `start.sh` ejecuta `python manage.py check --deploy --fail-level ERROR` y luego levanta Gunicorn.
+- WhiteNoise sirve los archivos estáticos generados en `staticfiles`.
+
+Para producción, configurar como mínimo:
 
 ```env
-DJANGO_SECRET_KEY=tu_clave_secreta
+DJANGO_SECRET_KEY=<generada por Render o propia>
 DJANGO_DEBUG=False
-DJANGO_ALLOWED_HOSTS=.onrender.com
-CSRF_TRUSTED_ORIGINS=https://*.onrender.com
-DATABASE_URL=postgresql://usuario:password@host:5432/postgres?sslmode=require
-STOCKFISH_BINARY=/usr/games/stockfish
+DJANGO_ALLOWED_HOSTS=<tu-dominio-render.onrender.com>
+CSRF_TRUSTED_ORIGINS=https://<tu-dominio-render.onrender.com>
+```
+
+---
+
+## 🧪 Checks útiles
+
+```bash
+python manage.py check
+python manage.py check --deploy --fail-level ERROR
+python manage.py test
+python manage.py collectstatic --no-input
 ```
 
 ---
 
 ## 📌 Mejoras futuras
 
-- WebSockets con Django Channels
-- Sistema de espectador
-- Replay de partidas
-- Matchmaking por ELO
-- Puzzles y entrenamiento
-- Torneos online
-
----
+- Persistencia real para usuarios, partidas, salas y rankings.
+- Integración efectiva con Stockfish/UCI cuando `STOCKFISH_BINARY` esté configurado.
+- WebSockets con Django Channels para reemplazar polling.
+- Matchmaking por Elo.
+- Sistema de espectadores.
+- Replay de partidas.
+- Puzzles persistentes y entrenamiento progresivo.
+- Torneos online.
