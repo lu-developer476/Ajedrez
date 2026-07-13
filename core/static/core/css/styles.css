@@ -20,6 +20,9 @@
   --font-main: 'Rajdhani', sans-serif;
   --font-title: 'Orbitron', sans-serif;
   --cell-size: min(7vw, 62px, calc((100dvh - 250px) / 8));
+  --piece-size: clamp(2.05rem, calc(var(--cell-size) * 0.74), 2.85rem);
+  --piece-size-cyborg: clamp(1.72rem, calc(var(--cell-size) * 0.62), 2.35rem);
+  --piece-size-cyborg-knight: clamp(1.48rem, calc(var(--cell-size) * 0.54), 2.05rem);
   --board-side: calc(var(--cell-size) * 8);
   --coord-gutter: 24px;
   --coord-gap: 10px;
@@ -672,7 +675,7 @@ body {
 .piece {
   position: relative;
   z-index: 1;
-  font-size: clamp(1.85rem, 4vw, 2.65rem);
+  font-size: var(--piece-size);
   line-height: 1;
   font-family: var(--font-main);
   font-weight: 800;
@@ -728,14 +731,14 @@ body {
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "Cinzel", "Times New Roman", serif;
   font-weight: 700;
   letter-spacing: 0;
-  font-size: clamp(1.44rem, 3.58vw, 2.02rem);
+  font-size: var(--piece-size-cyborg);
   transform: scale(0.93);
   filter: drop-shadow(0 0 10px rgba(121, 246, 255, 0.4));
 }
 
 
 .piece.theme-cyborg[data-piece-type="n"] {
-  font-size: clamp(1.2rem, 3.05vw, 1.72rem);
+  font-size: var(--piece-size-cyborg-knight);
   transform: scale(0.84);
 }
 
@@ -1314,7 +1317,6 @@ body {
   .coords-right {
     width: var(--coord-gutter);
   }
-  .piece { font-size: clamp(1.55rem, 7vw, 2.2rem); }
   .footer {
     font-size: 0.86rem;
     flex-direction: column;
@@ -1773,6 +1775,9 @@ body {
     --coord-gutter: 22px;
     --coord-gap: 8px;
     --cell-size: min(7.2vw, calc((100vw - 92px) / 8), 58px);
+    --piece-size: clamp(1.9rem, calc(var(--cell-size) * 0.72), 2.62rem);
+    --piece-size-cyborg: clamp(1.58rem, calc(var(--cell-size) * 0.6), 2.16rem);
+    --piece-size-cyborg-knight: clamp(1.36rem, calc(var(--cell-size) * 0.52), 1.88rem);
   }
 
   html,
@@ -1856,6 +1861,9 @@ body {
     --coord-gutter: 14px;
     --coord-gap: 4px;
     --cell-size: min(calc((100vw - 42px - (var(--coord-gutter) * 2) - (var(--coord-gap) * 2)) / 8), calc((100dvh - 220px) / 8), 44px);
+    --piece-size: clamp(1.38rem, calc(var(--cell-size) * 0.7), 2rem);
+    --piece-size-cyborg: clamp(1.16rem, calc(var(--cell-size) * 0.59), 1.68rem);
+    --piece-size-cyborg-knight: clamp(1rem, calc(var(--cell-size) * 0.51), 1.46rem);
   }
 
   html {
@@ -1971,18 +1979,9 @@ body {
     font-size: 0.62rem;
   }
 
-  .piece {
-    font-size: clamp(1.25rem, 8vw, 2rem);
-  }
-
   .square {
     min-width: 0;
     min-height: 0;
-  }
-
-  .piece.theme-cyborg,
-  .piece.theme-cyborg[data-piece-type="n"] {
-    font-size: clamp(1.05rem, 6.7vw, 1.72rem);
   }
 
   .timer-panel,
@@ -2026,6 +2025,22 @@ body {
 
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --piece-size: clamp(1.32rem, calc(var(--cell-size) * 0.68), 1.86rem);
+    --piece-size-cyborg: clamp(1.1rem, calc(var(--cell-size) * 0.57), 1.56rem);
+    --piece-size-cyborg-knight: clamp(0.95rem, calc(var(--cell-size) * 0.5), 1.36rem);
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --piece-size: clamp(1.2rem, calc(var(--cell-size) * 0.66), 1.68rem);
+    --piece-size-cyborg: clamp(1rem, calc(var(--cell-size) * 0.55), 1.42rem);
+    --piece-size-cyborg-knight: clamp(0.88rem, calc(var(--cell-size) * 0.48), 1.24rem);
   }
 }
 
