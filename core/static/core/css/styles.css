@@ -23,7 +23,9 @@
   --board-side: calc(var(--cell-size) * 8);
   --coord-gutter: 24px;
   --coord-gap: 10px;
+  --footer-height: 28px;
 }
+
 
 * { box-sizing: border-box; }
 html, body {
@@ -64,7 +66,7 @@ body {
   z-index: 1;
   flex: 1 1 auto;
   width: min(1400px, calc(100% - 24px));
-  height: calc(100dvh - 94px);
+  height: calc(100dvh - 122px);
   min-height: 0;
   margin: 6px auto 0;
   display: grid;
@@ -1205,18 +1207,24 @@ body {
 }
 
 .footer {
-  display: none;
   position: relative;
   z-index: 1;
+  flex: 0 0 var(--footer-height);
+  min-height: var(--footer-height);
+  width: min(1400px, calc(100% - 24px));
+  margin: 0 auto;
+  display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  padding: 0 20px 22px;
+  gap: 8px;
+  padding: 0 10px 4px;
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.95rem;
+  font-size: clamp(0.62rem, 0.85vw, 0.78rem);
+  line-height: 1;
   color: var(--muted);
   flex-wrap: wrap;
   text-align: center;
+  overflow: hidden;
 }
 
 .footer-separator { color: rgba(255,255,255,0.25); }
@@ -1727,5 +1735,24 @@ body {
     max-width: 100%;
     align-items: center;
     text-align: center;
+  }
+}
+
+/* Compact footer: keep credits visible without reintroducing page scroll. */
+.footer {
+  display: flex;
+}
+
+@media (max-width: 720px) {
+  :root { --footer-height: 34px; }
+  .game-shell {
+    height: calc(100dvh - 150px);
+    margin-top: 6px;
+  }
+  .footer {
+    gap: 4px 7px;
+    padding-bottom: 3px;
+    font-size: 0.58rem;
+    line-height: 1.05;
   }
 }
