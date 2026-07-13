@@ -118,6 +118,21 @@ body {
 
 .brand-box { padding: 14px 16px; text-align: center; }
 
+.board-legend-card {
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.board-legend-card .legend-inline {
+  justify-content: flex-start;
+}
+
+.board-legend-card .legend-inline span {
+  flex: 1 1 140px;
+  text-align: left;
+}
+
 .game-shell.font-theme-orbitron {
   --font-main: 'Orbitron', sans-serif;
   --font-title: 'Orbitron', sans-serif;
