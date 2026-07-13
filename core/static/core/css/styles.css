@@ -1237,11 +1237,16 @@ body {
 @media (max-width: 1120px) {
   .game-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .board-main-row {
-    flex-wrap: wrap;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
+    grid-template-columns: var(--coord-gutter) var(--board-side) var(--coord-gutter);
+    align-items: start;
+    justify-content: center;
+    gap: var(--coord-gap);
+    width: max-content;
+    max-width: 100%;
   }
   .side-stack {
+    grid-column: 1 / -1;
     width: 100%;
     min-width: 0;
     grid-template-columns: repeat(2, minmax(240px, 1fr));
@@ -1952,7 +1957,8 @@ body {
 
   .board-main-row {
     gap: var(--coord-gap);
-    width: 100%;
+    grid-template-columns: var(--coord-gutter) var(--board-side) var(--coord-gutter);
+    width: max-content;
   }
 
   .coords-top,
