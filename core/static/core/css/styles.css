@@ -88,6 +88,10 @@ body {
   text-align: center;
 }
 
+.game-shell :where(p, h1, h2, h3, label, small, li, span, strong, summary, button, select) {
+  overflow-wrap: anywhere;
+}
+
 .game-shell p,
 .game-shell h1,
 .game-shell h2,
@@ -444,6 +448,7 @@ body {
 }
 
 .board {
+  flex: 0 0 var(--board-side);
   width: var(--board-side);
   height: var(--board-side);
   display: grid;
@@ -1759,6 +1764,12 @@ body {
 
 /* Responsive repair pass: tablet/mobile should scroll naturally and keep the board inside viewport. */
 @media (max-width: 1120px) {
+  :root {
+    --coord-gutter: 22px;
+    --coord-gap: 8px;
+    --cell-size: min(7.2vw, calc((100vw - 92px) / 8), 58px);
+  }
+
   html,
   body {
     min-height: 100%;
@@ -1806,6 +1817,13 @@ body {
   .arena {
     max-height: none;
     justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+  }
+
+  .board-wrap {
+    max-width: 100%;
+    margin-inline: auto;
   }
 
   .footer {
@@ -1951,6 +1969,11 @@ body {
     font-size: clamp(1.25rem, 8vw, 2rem);
   }
 
+  .square {
+    min-width: 0;
+    min-height: 0;
+  }
+
   .piece.theme-cyborg,
   .piece.theme-cyborg[data-piece-type="n"] {
     font-size: clamp(1.05rem, 6.7vw, 1.72rem);
@@ -1988,7 +2011,7 @@ body {
   :root {
     --coord-gutter: 12px;
     --coord-gap: 3px;
-    --cell-size: min(calc((100vw - 30px - (var(--coord-gutter) * 2) - (var(--coord-gap) * 2)) / 8), 39px);
+    --cell-size: min(calc((100vw - 30px - (var(--coord-gutter) * 2) - (var(--coord-gap) * 2)) / 8), calc((100dvh - 235px) / 8), 39px);
   }
 
   .nav-dropdowns {
